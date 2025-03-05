@@ -1,0 +1,25 @@
+{
+    "manifest_version": 3,
+    "name": "CERTIDOCS",
+    "version": "1.0",
+    "description": "Signature de documents via blockchain",
+    "permissions": [
+        "tabs",
+        "system.display",
+        "scripting",
+        "activeTab"
+    ],
+    "action": {
+        "default_title": "CERTIDOCS",
+        "default_popup": "popup.html"
+    },
+    "content_scripts": [
+        {
+          "matches": ["<all_urls>"],
+          "js": ["content.js"]
+        }
+    ],
+    "background": {
+        "service_worker": "background.js"
+    }
+}

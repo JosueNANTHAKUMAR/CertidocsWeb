@@ -1,0 +1,49 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 20px;
+    width: 250px;
+    border-radius: 10px;
+  }
+  
+  h2 {
+    margin-bottom: 15px;
+    color: #333;
+    font-weight: 600;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 23px;
+    background: linear-gradient(to bottom, #f7f7f7, #e7e7e7);
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  button {
+    width: 100%;
+    padding: 12px;
+    background-color: #9584ff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+    margin-top: 15px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+  }
+  
+  button:hover {
+    background-color: #7a6bff;
+    transform: scale(1.05);
+  }
+  
+  #logo {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    width: 60px;
+    height: auto;
+    margin-top: 0;
+  }

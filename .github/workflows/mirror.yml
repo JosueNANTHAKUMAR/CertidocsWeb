@@ -18,11 +18,12 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Repository mirroring
+
+      - name: Push only main branch to target repository
         uses: pixta-dev/repository-mirroring-action@v1
         with:
           target_repo_url: ${{ secrets.MIRROR_URL }}
           ssh_private_key: ${{ secrets.CLONE_KEY }}
-          target_branch: main
-          force_with_lease: true  # 🔥 Évite d'écraser les commits récents
-          mirror_mode: false
+          target_branch: main  # 🔥 Push only to main
+          mirror_mode: false   # ⛔ Prevents deleting other branches
+          force_with_lease: true  # 🔒 Ensures safe force-pushing

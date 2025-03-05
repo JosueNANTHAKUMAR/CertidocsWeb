@@ -24,3 +24,5 @@ jobs:
           target_repo_url: ${{ secrets.MIRROR_URL }}
           ssh_private_key: ${{ secrets.CLONE_KEY }}
           target_branch: main
+          force_with_lease: true  # 🔥 Évite d'écraser les commits récents
+          mirror_mode: false

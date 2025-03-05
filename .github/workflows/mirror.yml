@@ -26,4 +26,3 @@ jobs:
           ssh_private_key: ${{ secrets.CLONE_KEY }}
           target_branch: main  # 🔥 Push only to main
           mirror_mode: false   # ⛔ Prevents deleting other branches
-          force_with_lease: true  # 🔒 Ensures safe force-pushing

@@ -1,28 +1,28 @@
-name: GitHub to Discord
+# name: GitHub to Discord
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    types: [opened, closed, merged]
+# on:
+#   push:
+#     branches:
+#       - main
+#   pull_request:
+#     types: [opened, closed, merged]
 
-jobs:
-  discord_notification:
-    name: Notify Discord
-    runs-on: ubuntu-latest
-    steps:
-      - name: Send notification to Discord
-        env:
-            DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        uses: Ilshidur/action-discord@master
-        with:
-          args: |
-            @here
-            🚀 **GitHub Notification**  
-            - **Repository**: [${{ github.repository }}](${{ github.event.repository.html_url }})  
-            - **Event**: ${{ github.event_name }}  
-            - **User**: ${{ github.actor }}
-            - **Branch**: ${{ github.ref_name || 'N/A' }}
-            - **Commit Message**: ${{ github.event.head_commit.message || 'N/A' }}  
-            🔗 [Voir sur GitHub](${{ github.event.head_commit.url || github.event.pull_request.html_url || github.event.repository.html_url }})
+# jobs:
+#   discord_notification:
+#     name: Notify Discord
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Send notification to Discord
+#         env:
+#             DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+#         uses: Ilshidur/action-discord@master
+#         with:
+#           args: |
+#             @here
+#             🚀 **GitHub Notification**  
+#             - **Repository**: [${{ github.repository }}](${{ github.event.repository.html_url }})  
+#             - **Event**: ${{ github.event_name }}  
+#             - **User**: ${{ github.actor }}
+#             - **Branch**: ${{ github.ref_name || 'N/A' }}
+#             - **Commit Message**: ${{ github.event.head_commit.message || 'N/A' }}  
+#             🔗 [Voir sur GitHub](${{ github.event.head_commit.url || github.event.pull_request.html_url || github.event.repository.html_url }})

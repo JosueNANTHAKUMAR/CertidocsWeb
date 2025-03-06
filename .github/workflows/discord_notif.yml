@@ -18,7 +18,6 @@ jobs:
         uses: Ilshidur/action-discord@master
         with:
           args: |
-            @here
             🚀 **GitHub Notification**  
             - **Repository**: [${{ github.repository }}](${{ github.event.repository.html_url }})  
             - **Event**: ${{ github.event_name }}  

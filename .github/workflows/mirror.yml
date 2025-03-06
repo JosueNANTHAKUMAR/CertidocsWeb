@@ -1,28 +1,28 @@
-name: Repository mirroring
+# name: Repository mirroring
 
-on:
-  pull_request:
-    branches:
-      - main
-  push:
-    branches:
-      - main
+# on:
+#   pull_request:
+#     branches:
+#       - main
+#   push:
+#     branches:
+#       - main
 
-jobs:
-  push_to_mirror:
-    name: Push repository to mirror
-    runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true || github.event_name == 'push'
-    steps:
-      - name: Repository checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+# jobs:
+#   push_to_mirror:
+#     name: Push repository to mirror
+#     runs-on: ubuntu-latest
+#     if: github.event.pull_request.merged == true || github.event_name == 'push'
+#     steps:
+#       - name: Repository checkout
+#         uses: actions/checkout@v3
+#         with:
+#           fetch-depth: 0
 
-      - name: Push only main branch to target repository
-        uses: pixta-dev/repository-mirroring-action@v1
-        with:
-          target_repo_url: ${{ secrets.MIRROR_URL }}
-          ssh_private_key: ${{ secrets.CLONE_KEY }}
-          target_branch: main  # 🔥 Push only to main
-          mirror_mode: false   # ⛔ Prevents deleting other branches
+#       - name: Push only main branch to target repository
+#         uses: pixta-dev/repository-mirroring-action@v1
+#         with:
+#           target_repo_url: ${{ secrets.MIRROR_URL }}
+#           ssh_private_key: ${{ secrets.CLONE_KEY }}
+#           target_branch: main  # 🔥 Push only to main
+#           mirror_mode: false   # ⛔ Prevents deleting other branches

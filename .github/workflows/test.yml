@@ -13,10 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send notification to Discord
+        env:
+            DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         uses: Ilshidur/action-discord@master
         with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK }}
-          message: |
+          args: |
             🚀 **GitHub Notification**  
             - **Repository**: [${{ github.repository }}](${{ github.event.repository.html_url }})  
             - **Event**: ${{ github.event_name }}  

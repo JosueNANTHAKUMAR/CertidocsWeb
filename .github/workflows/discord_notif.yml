@@ -15,12 +15,14 @@ jobs:
       - name: Send notification to Discord
         env:
             DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        run: |
-          curl -X POST -H "Content-Type: application/json" \
-          -d '{
-            "content": "@here",
-            "embeds": [{
-              "title": "🚀 **GitHub Notification**",
-              "description": "**Repository**: [${{ github.repository }}](${{ github.event.repository.html_url }})\n**Event**: ${{ github.event_name }}\n**User**: ${{ github.actor }}\n**Branch**: ${{ github.ref_name || 'N/A' }}\n**Commit Message**: ${{ github.event.head_commit.message || 'N/A' }}\n🔗 [Voir sur GitHub](${{ github.event.head_commit.url || github.event.pull_request.html_url || github.event.repository.html_url }})"
-            }]
-          }' $DISCORD_WEBHOOK
+        uses: Ilshidur/action-discord@master
+        with:
+          args: |
+            @here
+            🚀 **GitHub Notification**  
+            - **Repository**: [${{ github.repository }}](${{ github.event.repository.html_url }})  
+            - **Event**: ${{ github.event_name }}  
+            - **User**: ${{ github.actor }} 
+            - **Branch**: ${{ github.ref_name || 'N/A' }}
+            - **Commit Message**: ${{ github.event.head_commit.message || 'N/A' }}  
+            🔗 [Voir sur GitHub](${{ github.event.head_commit.url || github.event.pull_request.html_url || github.event.repository.html_url }})

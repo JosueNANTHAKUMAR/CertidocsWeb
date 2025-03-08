@@ -23,5 +23,5 @@ jobs:
             - **Event**: ${{ github.event_name }}  
             - **User**: ${{ github.actor }} 
             - **Branch**: ${{ github.ref_name || 'N/A' }}
-            - **Commit Message**: ${{ github.event.head_commit.message || 'N/A' }}  
+            - **Commit Message**: ${{ github.event.head_commit.message || 'N/A' }}
             🔗 [Voir sur GitHub](${{ github.event.head_commit.url || github.event.pull_request.html_url || github.event.repository.html_url }})

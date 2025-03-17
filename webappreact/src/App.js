@@ -10,7 +10,7 @@ function App() {
 
         <Routes>
           <Route path="/verify" element={<VerifyPage />} id="verify" />
-          <Route path="/generate" element={<GeneratePage />} id="generate" />
+          <Route path="/" element={<GeneratePage />} id="generate" />
         </Routes>
       </div>
     </Router>

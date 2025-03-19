@@ -28,20 +28,15 @@ const GeneratePage = () => {
 
   return (
     <div className="container">
-      <button id="logoutButton">
-        <i className="fas fa-sign-out-alt"></i>
-      </button>
-
-      <h2>Générer une signature via MetaMask</h2>
-      <p>{account ? `🟢 Connecté : ${account}` : "🔴 Non connecté"}</p>
-      
+      <button id="logoutButton"><i class="fas fa-sign-out-alt"></i></button>        
+        <h2>Générer une signature via MetaMask</h2>
+        <p id="account"></p>
+      <h3></h3>
       <h3><i className="fas fa-pen"></i> Message à signer électroniquement :</h3>
       <textarea
         id="messageInput"
         rows="4"
         placeholder="Saisissez votre message..."
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
       ></textarea>
       <div id="confirmationMessage"><span className="emoji">✅</span>Votre message a bien été récupéré.</div>
 
@@ -63,7 +58,6 @@ const GeneratePage = () => {
         type="text"
         id="recipientsInput"
         placeholder="Adresse1, Adresse2, ..."
-        value={recipients}
         onChange={(e) => setRecipients(e.target.value)}
       />
       <p style={{ fontSize: "12px", fontStyle: "italic" }}>Séparées par des virgules</p>
@@ -71,7 +65,7 @@ const GeneratePage = () => {
       <button id="signMessage" disabled>
         🖊️ Signer et stocker sur la blockchain
       </button>
-      <p id="status">{status}</p>
+      <p id="status"></p>
       <div id="copyMessage"></div>
     </div>
   );

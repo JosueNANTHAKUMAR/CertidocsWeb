@@ -35,7 +35,7 @@ function VerifyPage() {
         </div>
 
         <button id="verifySignature">✅ Vérifier la signature</button>
-        <p id="status"></p>
+        <p id="verify"></p>
     </div>
     );
 }

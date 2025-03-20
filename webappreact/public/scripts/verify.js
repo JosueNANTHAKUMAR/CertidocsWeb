@@ -36,17 +36,28 @@ if (signatureIdVar) {
 
 async function connectMetaMask() {
     if (typeof window.ethereum === "undefined") {
-        alert(
-            "❌ MetaMask non détecté ! Essaie d'actualiser la page ou vérifie ton installation."
-        );
+        alert("❌ MetaMask non détecté !");
         return;
     }
 
     const provider = new ethers.BrowserProvider(window.ethereum);
-    signer = await provider.getSigner();
-    const address = await signer.getAddress();
-    let addressShort =
-        address.substring(0, 6) + "..." + address.substring(address.length - 4);
+
+    // Vérifie si MetaMask est déjà connecté
+    const accounts = await provider.send("eth_accounts", []);
+    if (accounts.length > 0) {
+        signer = await provider.getSigner();
+        const address = await signer.getAddress();
+        updateUI(address); // Met à jour l'interface avec l'adresse
+    } else {
+        alert("🔴 Aucun compte connecté à MetaMask !");
+    }
+
+    contract = new ethers.Contract(contractAddress, abi, signer);
+    document.getElementById("signMessage").disabled = true;
+}
+
+function updateUI(address) {
+    let addressShort = address.substring(0, 6) + "..." + address.substring(address.length - 4);
     const accountElement = document.getElementById("account");
     accountElement.innerHTML = `
         <div style="display: flex; align-items: center; font-size: 0.9em;">
@@ -58,9 +69,6 @@ async function connectMetaMask() {
 
     const copyButton = createCopyButton(address);
     accountElement.querySelector("div").appendChild(copyButton);
-
-    contract = new ethers.Contract(contractAddress, abi, signer);
-    document.getElementById("signMessage").disabled = true;
 }
 
 function createAddressSpan(address, addressShort) {
@@ -126,28 +134,48 @@ async function verifySignature() {
         alert("❌ Le message ne peut pas être vide !");
         return;
     }
-
+    
     const messageHash = ethers.keccak256(ethers.toUtf8Bytes(message));
     const userAddress = await signer.getAddress();
-
-    document.getElementById("status").innerText = "⏳ Vérification en cours...";
+    document.getElementById("verify").innerText = "⏳ Vérification en cours...";
     try {
         const isValid = await contract.verifySignature(
             signatureId,
             userAddress,
             messageHash
         );
-        document.getElementById("status").innerText = isValid
-            ? "✅ Signature VALIDE !"
-            : "❌ Signature NON VALIDE.";
+        document.getElementById("verify").innerText = isValid
+        ? "✅ Signature VALIDE !"
+        : "❌ Signature NON VALIDE.";
         console.log(isValid);
     } catch (error) {
+        alert(error.message);
         console.error(error);
-        document.getElementById("status").innerText =
-            "❌ Erreur lors de la vérification.";
+        document.getElementById("verify").innerText =
+        "❌ Erreur lors de la vérification.";
     }
 }
 
+async function checkMetaMaskConnection() {
+    if (typeof window.ethereum === "undefined") {
+        document.getElementById("account").innerText = "❌ MetaMask non détecté !";
+        return;
+    }
+
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const accounts = await provider.send("eth_accounts", []);
+
+    if (accounts.length > 0) {
+        signer = await provider.getSigner();
+        const address = await signer.getAddress();
+        contract = new ethers.Contract(contractAddress, abi, signer);
+        updateUI(address);
+    } else {
+        document.getElementById("account").innerText = "🔴 MetaMask non connecté !";
+    }
+}
+
+window.addEventListener("load", checkMetaMaskConnection);
 document
     .getElementById("verifySignature")
     .addEventListener("click", verifySignature);

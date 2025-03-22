@@ -6,16 +6,16 @@ import { useEffect } from "react";
 
 function VerifyPage() {
     
-    useEffect(() => {
-        const script = document.createElement("script");
-        script.src = `${process.env.PUBLIC_URL}/scripts/verify.js`;
-        script.async = true;
-        document.body.appendChild(script);
+    // useEffect(() => {
+    //     const script = document.createElement("script");
+    //     script.src = `${process.env.PUBLIC_URL}/scripts/verify.js`;
+    //     script.async = true;
+    //     document.body.appendChild(script);
       
-        return () => {
-          document.body.removeChild(script); // Nettoyage du script
-        };
-    }, []);
+    //     return () => {
+    //       document.body.removeChild(script); // Nettoyage du script
+    //     };
+    // }, []);
     
     return (
     <div className="container">

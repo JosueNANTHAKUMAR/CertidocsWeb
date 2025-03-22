@@ -15,16 +15,16 @@ const GeneratePage = () => {
 
 
 
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src = `${process.env.PUBLIC_URL}/scripts/script.js`
-    script.async = true;
-    document.body.appendChild(script);
+  // useEffect(() => {
+  //   const script = document.createElement("script");
+  //   script.src = `${process.env.PUBLIC_URL}/scripts/script.js`
+  //   script.async = true;
+  //   document.body.appendChild(script);
 
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
+  //   return () => {
+  //     document.body.removeChild(script);
+  //   };
+  // }, []);
 
   return (
     <div className="container">

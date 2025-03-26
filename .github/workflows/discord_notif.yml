@@ -5,7 +5,7 @@ on:
     branches:
       - main
   pull_request:
-    types: [opened, closed, merged]
+    types: [opened, closed, merged, reopened]
 
 jobs:
   discord_notification:
@@ -20,8 +20,8 @@ jobs:
           args: |
             🚀 **GitHub Notification**  
             - **Repository**: [${{ github.repository }}](${{ github.event.repository.html_url }})  
-            - **Event**: ${{ github.event_name }}  
-            - **User**: ${{ github.actor }} 
-            - **Branch**: ${{ github.ref_name || 'N/A' }}
-            - **Commit Message**: ${{ github.event.head_commit.message || 'N/A' }}
-            🔗 [Voir sur GitHub](${{ github.event.head_commit.url || github.event.pull_request.html_url || github.event.repository.html_url }})
+            - **Event**: ${{ github.event_name == 'pull_request' && 'Pull Request' || github.event_name }}  
+            - **User**: ${{ github.actor }}  
+            - ${{ github.event_name == 'pull_request' && format('{0} → {1}', github.event.pull_request.head.ref, github.event.pull_request.base.ref) || github.ref_name }}  
+            - **Commit Message**: ${{ github.event.head_commit.message || github.event.pull_request.title || 'N/A' }}  
+            🔗 [Voir sur GitHub](${{ github.event.pull_request.html_url || github.event.repository.html_url }})

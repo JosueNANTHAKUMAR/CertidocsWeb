@@ -6,7 +6,9 @@ import "../CSS/status.css";
 import "../CSS/logoutButton.css";
 
 const GeneratePage = () => {
+  const [message, setMessage] = useState("");
   const [expiration, setExpiration] = useState("3600");
+  const [recipients, setRecipients] = useState("");
 
   return (
     <div className="container">

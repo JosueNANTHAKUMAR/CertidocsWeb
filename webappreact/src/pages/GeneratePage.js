@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { useEffect } from "react";
 import "../CSS/style.css";
 import "../CSS/adresse.css";
 import "../CSS/copyButton.css";
@@ -7,24 +6,7 @@ import "../CSS/status.css";
 import "../CSS/logoutButton.css";
 
 const GeneratePage = () => {
-  const [message, setMessage] = useState("");
   const [expiration, setExpiration] = useState("3600");
-  const [recipients, setRecipients] = useState("");
-  const [status] = useState("");
-  const [account] = useState(null);
-
-
-
-  // useEffect(() => {
-  //   const script = document.createElement("script");
-  //   script.src = `${process.env.PUBLIC_URL}/scripts/script.js`
-  //   script.async = true;
-  //   document.body.appendChild(script);
-
-  //   return () => {
-  //     document.body.removeChild(script);
-  //   };
-  // }, []);
 
   return (
     <div className="container">

@@ -2,31 +2,33 @@ import React from "react";
 import "../CSS/style.css";
 import "../CSS/copyButton.css";
 import "../CSS/adresse.css";
+import ButtonCustom from "../component/ButtonCustom";
+import Container from "../component/Container";
+import CustomText from "../component/CustomText";
+import CustomTextInput from "../component/CustomTextInput";
 
 function VerifyPage() {
-
-    
-    return (
-    <div className="container">
-        <h2>Vérifier une signature via MetaMask</h2>
-        <p id="account"></p>
-
-        <h3>Entrez l'ID de la signature :</h3>
-        <input type="text" id="signatureId" placeholder="0x..." size="50" />
-        <div id="confirmationSignId" className="confirmationMessage">
+  return (
+    <Container>
+      <CustomText className="" Text="Vérifier une signature via MetaMask" />
+      <p id="account"></p>
+      
+      <CustomText className="" Text="Entrez l'ID de la signature :" />
+      <CustomTextInput id="signatureId" placeholder="0x..." />
+      <div id="confirmationSignId" className="confirmationMessage">
         <span className="emoji">✅</span>Votre signatureID a bien été récupéré.
-        </div>
-
-        <h3>Entrez le message signé :</h3>
-        <textarea id="messageInput" rows="4" cols="50" placeholder="Écris le message ici..."></textarea>
-        <div id="confirmationMessage">
+      </div>
+      
+      <CustomText className="" Text="Entrez le message signé :" />
+      <CustomTextInput id="messageInput" rows="4" placeholder="Écris le message ici..." />
+      <div id="confirmationMessage">
         <span className="emoji">✅</span>Votre message a bien été récupéré.
-        </div>
-
-        <button id="verifySignature">✅ Vérifier la signature</button>
-        <p id="verify"></p>
-    </div>
-    );
+      </div>
+      
+      <ButtonCustom id="verifySignature">✅ Vérifier la signature</ButtonCustom>
+      <p id="verify"></p>
+    </Container>
+  );
 }
 
 export default VerifyPage;

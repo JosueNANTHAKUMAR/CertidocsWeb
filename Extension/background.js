@@ -94,7 +94,7 @@ chrome.runtime.onMessage.addListener((request) => {
                     console.log("SignatureId:", response.signatureId);
                     if (response.content === "Aucune div trouvée") {
                         chrome.windows.create({
-                            url: "http://localhost:8080/verify", // Remplace par l'URL que tu veux
+                            url: "http://localhost:8080/verify.html", // Remplace par l'URL que tu veux
                             type: "popup",
                             width: windowWidth,
                             height: windowHeight,
@@ -104,7 +104,7 @@ chrome.runtime.onMessage.addListener((request) => {
                         return;
                     } else {
                         chrome.windows.create({
-                            url: "http://localhost:8080/verify?messageHash=" + response.content + "&signatureId=" + response.signatureId, // Remplace par l'URL que tu veux
+                            url: "http://localhost:8080/verify.html?messageHash=" + response.content + "&signatureId=" + response.signatureId, // Remplace par l'URL que tu veux
                             type: "popup",
                             width: windowWidth,
                             height: windowHeight,

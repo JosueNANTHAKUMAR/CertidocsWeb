@@ -146,17 +146,55 @@ function updateUI(address) {
 }
 
 async function connectMetaMask() {
-    if (typeof window.ethereum === "undefined") {
-        alert("❌ MetaMask non détecté !");
-        return;
-    }
+    const popup = window.open(
+        "http://localhost:3000/",
+        "Connexion",
+        "width=400,height=500"
+    );
 
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    signer = await provider.getSigner();
-    const address = await signer.getAddress();
-    contract = new ethers.Contract(contractAddress, abi, signer);
-    updateUI(address);
-    document.getElementById("signMessage").disabled = false;
+    return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject("⏰ Temps écoulé"), 50000);
+
+        window.addEventListener("message", async (event) => {
+            console.log("📩 Message reçu depuis :", event.origin);
+            console.log("🔍 Contenu complet du message :", event.data);
+            if (event.origin !== "http://localhost:3000") {
+                console.warn("Origine non autorisée :", event.origin);
+                return;
+            }
+        
+            const { type, address, chainId } = event.data;
+    
+            if (type !== "wallet_connected") return;
+        
+            if (!address || !chainId) {
+                reject("❌ Données incomplètes reçues depuis le popup !");
+                return;
+            }
+        
+            try {
+                clearTimeout(timeout);
+        
+                console.log("🔗 Adresse connectée :", address);
+                console.log("🆔 Chain ID :", chainId);
+        
+                const network = {
+                    name: "custom-network",
+                    chainId: parseInt(chainId),
+                };
+                const provider = new ethers.BrowserProvider(window.ethereum);
+                signer = await provider.getSigner(address);
+                contract = new ethers.Contract(contractAddress, abi, signer);
+        
+                updateUI(address);
+                document.getElementById("signMessage").disabled = false;
+        
+            } catch (error) {
+                console.error("Erreur lors de la connexion :", error);
+                reject(error);
+            }
+        });
+    });
 }
 
 document.getElementById("logoutButton").addEventListener("click", function () {
@@ -164,6 +202,13 @@ document.getElementById("logoutButton").addEventListener("click", function () {
     contract = null;
     updateUI(null);
     alert("Déconnexion effectuée !");
+});
+
+window.addEventListener("DOMContentLoaded", () => {
+    console.log("🔄 Réinitialisation de l'état au chargement");
+    signer = null;
+    contract = null;
+    updateUI(null);
 });
 
 async function signMessage() {

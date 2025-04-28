@@ -1,16 +1,45 @@
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "getDivContentGenerate") {
 
-        // recupere la deuxieme div avec la classe 'Am aiL Al editable LW-avf tS-tW' et recupere son contenu
-        try {
-            const divs = document.querySelectorAll("div.Am.aiL.Al.editable.LW-avf.tS-tW");
-            // recupere le contenu de la derniere div
-            const content = divs[divs.length - 1].innerText;
-            console.log("Contenu de la div:", content);
-            sendResponse({ content: content });
-        } catch (error) {
-            sendResponse({ content: "Aucune div trouvée" });
+        function tryGetContent() {
+            // Récupérer sur Gmail
+            const gmailDivs = document.querySelectorAll("div.Am.aiL.Al.editable.LW-avf.tS-tW");
+            if (gmailDivs.length > 0) {
+                const content = gmailDivs[gmailDivs.length - 1].innerText;
+                console.log("✅ Gmail trouvé :", content);
+                sendResponse({ content: content });
+                return true;
+            }
+
+            // Récupérer sur Outlook
+            const candidates = document.querySelectorAll('div[contenteditable="true"][role="textbox"]');
+            for (const el of candidates) {
+                const ariaLabel = el.getAttribute('aria-label') || "";
+                if (ariaLabel.includes('Corps du message')) {
+                    const content = el.innerText;
+                    console.log("✅ Outlook trouvé :", content);
+                    sendResponse({ content: content });
+                    return true;
+                }
+            }
+
+            return false; // Rien trouvé encore
         }
+
+        // Essaye immédiatement
+        if (tryGetContent()) {
+            return true;
+        }
+
+        // Sinon observe (Outlook est lent parfois)
+        const observer = new MutationObserver(() => {
+            if (tryGetContent()) {
+                observer.disconnect();
+            }
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
+        return true;
     }
 });
 

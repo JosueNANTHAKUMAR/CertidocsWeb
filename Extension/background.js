@@ -104,7 +104,7 @@ chrome.runtime.onMessage.addListener((request) => {
                         return;
                     } else {
                         chrome.windows.create({
-                            url: "http://localhost:8080/verify?messageHash=" + response.content + "&signatureId=" + response.signatureId, // Remplace par l'URL que tu veux
+                            url: "http://localhost:8080/verify.html?messageHash=" + hash + "&signatureId=" + response.signatureId, // Remplace par l'URL que tu veux
                             type: "popup",
                             width: windowWidth,
                             height: windowHeight,

@@ -23,9 +23,6 @@ if (typeof messageHashVar === "undefined") {
 if (typeof signatureIdVar === "undefined") {
     var signatureIdVar = urlParams.get("signatureId");
 }
-// const urlParams = new URLSearchParams(window.location.search);
-// let messageHashVar = urlParams.get("messageHash");
-// let signatureIdVar = urlParams.get("signatureId");
 
 if (messageHashVar) {
     document.getElementById("messageInput").value = messageHashVar;
@@ -134,9 +131,9 @@ async function verifySignature() {
         alert("❌ Le message ne peut pas être vide !");
         return;
     }
-    
-    const messageHash = ethers.keccak256(ethers.toUtf8Bytes(message));
+    messageHash = message;
     const userAddress = await signer.getAddress();
+    console.log("Hash du message :", messageHash);
     document.getElementById("verify").innerText = "⏳ Vérification en cours...";
     try {
         const isValid = await contract.verifySignature(

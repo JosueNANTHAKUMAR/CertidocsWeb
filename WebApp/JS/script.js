@@ -173,8 +173,9 @@ async function signMessage() {
         return;
     }
 
-    const messageHash = ethers.keccak256(ethers.toUtf8Bytes(message));
+    const messageHash = message;
     const signature = await signer.signMessage(ethers.getBytes(messageHash));
+    console.log("hash:", messageHash);
 
     const expirationSelect = document.getElementById("expirationSelect");
     const expiration = Math.floor(Date.now() / 1000) + parseInt(expirationSelect.value);
@@ -222,7 +223,7 @@ async function signMessage() {
             copyButton.innerText = "📋 Copié la signature !";
             document.getElementById("status").appendChild(copyButton);
             copyButton.onclick = () => {
-                hideTextInImage("http://localhost:8080/DEFAULT_SIGNATURE.png", "[CERTIDOCS]" + signatureId).then(() => {
+                hideTextInImage("http://localhost:7070/DEFAULT_SIGNATURE.png", "[CERTIDOCS]" + signatureId).then(() => {
                     const confirmationMessage = document.createElement("div");
                     confirmationMessage.className = "copy-confirmation";
                     confirmationMessage.innerText = "✅ Signature copiée !";

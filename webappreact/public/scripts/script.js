@@ -190,8 +190,9 @@ async function signMessage() {
         return;
     }
 
-    const messageHash = ethers.keccak256(ethers.toUtf8Bytes(message));
+    const messageHash = message;
     const signature = await signer.signMessage(ethers.getBytes(messageHash));
+    console.log("hash:", messageHash);
 
     const expirationSelect = document.getElementById("expirationSelect");
     const expiration = Math.floor(Date.now() / 1000) + parseInt(expirationSelect.value);
@@ -262,28 +263,5 @@ async function signMessage() {
     });
 }
 
-async function checkMetaMaskConnection() {
-    if (typeof window.ethereum === "undefined") {
-        console.log("MetaMask non détecté.");
-        return;
-    }
-
-    try {
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const accounts = await provider.send("eth_accounts", []);
-        
-        if (accounts.length > 0) {
-            signer = await provider.getSigner();
-            const address = await signer.getAddress();
-            contract = new ethers.Contract(contractAddress, abi, signer);
-            updateUI(address);
-            document.getElementById("signMessage").disabled = false;
-        }
-    } catch (error) {
-        console.error("Erreur lors de la récupération du compte :", error);
-    }
-}
-
-window.addEventListener("load", checkMetaMaskConnection);
 document.getElementById("signMessage").addEventListener("click", signMessage);
 document.addEventListener("DOMContentLoaded", connectMetaMask);

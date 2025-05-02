@@ -2,11 +2,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "getDivContentGenerate") {
     let resolved = false;
 
-    // ✅ GMAIL : NE PAS TOUCHER
+    // ✅ GMAIL
     try {
       const divs = document.querySelectorAll("div.Am.aiL.Al.editable.LW-avf.tS-tW");
       if (divs.length) {
-        const content = divs[divs.length - 1].innerText;
+        const content = normalizeMessage(divs[divs.length - 1].innerText);
         console.log("✅ Gmail trouvé !");
         sendResponse({ content : content });
         resolved = true;
@@ -27,13 +27,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           aria.toLowerCase().includes("corps du message") ||
           aria.toLowerCase().includes("message body")
         ) {
-          let content = el.innerText || "";
-          content = content
-            .replace(/\r\n/g, "\n")
-            .replace(/\n{2,}/g, "\n")
-            .replace(/[ \t]{2,}/g, " ")
-            .replace(/\u200B/g, "")
-            .trim();
+          let content = normalizeMessage(el.innerText || "");
 
           console.log("✅ Outlook trouvé !");
           sendResponse({ content : content });
@@ -56,6 +50,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
+function normalizeMessage(content) {
+    return content
+      .replace(/\r\n/g, "\n")            // Windows newlines → Unix
+      .replace(/\n{2,}/g, "\n")          // multiple line breaks → single
+      .replace(/[ \t]{2,}/g, " ")        // multiple spaces → one
+      .replace(/\u200B/g, "")            // invisible zero-width space
+      .replace(/\s+$/, "")               // trailing whitespace
+      .replace(/^\s+/, "");              // leading whitespace
+  }
+  
 
 async function extractTextFromImage(imageUrl) {
     const img = new Image();
@@ -136,6 +140,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             if (src) {
                 extractTextFromImage(src).then(text => {
                     console.log("✅ Signature extraite :", text);
+                    content = normalizeMessage(content);
                     sendResponse({ content: content, signatureId: text });
                 }).catch(() => {
                     console.error("[getDivContentVerify] Erreur extraction image");

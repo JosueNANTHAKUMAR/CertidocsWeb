@@ -52,14 +52,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 function normalizeMessage(content) {
     return content
-      .replace(/\r\n/g, "\n")            // Windows newlines → Unix
+      .replace(/\r\n/g, "\n")            // CRLF to LF
       .replace(/\n{2,}/g, "\n")          // multiple line breaks → single
       .replace(/[ \t]{2,}/g, " ")        // multiple spaces → one
-      .replace(/\u200B/g, "")            // invisible zero-width space
+      .replace(/\u200B/g, "")            // zero-width space
+      .replace(/\u00A0/g, " ")           // non-breaking space
       .replace(/\s+$/, "")               // trailing whitespace
-      .replace(/^\s+/, "");              // leading whitespace
-  }
-  
+      .replace(/^\s+/, "")               // leading whitespace
+      .normalize("NFC");
+}
 
 async function extractTextFromImage(imageUrl) {
     const img = new Image();
@@ -114,6 +115,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                         if (el.innerText.trim()) content += el.innerText.trim() + "\n";
                     }
                     content = content.trim();
+                    content = normalizeMessage(content);
                 }
             }
 

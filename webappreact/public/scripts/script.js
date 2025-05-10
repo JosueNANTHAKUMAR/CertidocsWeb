@@ -15,6 +15,24 @@ if (typeof abi === "undefined") {
     ];
 }
 
+window.addEventListener('walletConnected', async () => {
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    signer = await provider.getSigner();
+    const address = await signer.getAddress();
+    console.log(address);
+    contract = new ethers.Contract(contractAddress, abi, signer);
+    console.log("✅ Connexion établie via script.js :", { provider, signer, address, contract });
+
+    updateUI(address);
+    document.getElementById("signMessage").disabled = false;
+});
+
+window.addEventListener('walletDisconnected', () => {
+    signer = null;
+    contract = null;
+    updateUI(null);
+    document.getElementById("signMessage").disabled = true;
+});
 
 async function hideTextInImage(imageUrl, text) {
     const img = new Image();
@@ -125,6 +143,8 @@ function createCopyButton(address) {
 
 function updateUI(address) {
     const accountContainer = document.getElementById("account");
+    if (!accountContainer) return;
+
     accountContainer.innerHTML = "";
 
     if (address) {
@@ -133,83 +153,17 @@ function updateUI(address) {
         const copyButton = createCopyButton(address);
         accountContainer.appendChild(addressSpan);
         accountContainer.appendChild(copyButton);
-        document.getElementById("logoutButton").style.display = "block";
+
+        // Affiche le bouton "signer"
+        const signBtn = document.getElementById("signMessage");
+        if (signBtn) signBtn.disabled = false;
+
     } else {
-        const connectButton = document.createElement("button");
-        connectButton.id = "connectMetaMask";
-        connectButton.innerText = "🔗 Se connecter à MetaMask";
-        connectButton.style.width = "100%";
-        connectButton.addEventListener("click", connectMetaMask);
-        accountContainer.appendChild(connectButton);
-        document.getElementById("logoutButton").style.display = "none";
+        // Si déconnecté → on vide simplement l'UI (pas de bouton "connecter MetaMask")
+        const signBtn = document.getElementById("signMessage");
+        if (signBtn) signBtn.disabled = true;
     }
 }
-
-async function connectMetaMask() {
-    const popup = window.open(
-        "http://localhost:3000/",
-        "Connexion",
-        "width=400,height=500"
-    );
-
-    return new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => reject("⏰ Temps écoulé"), 50000);
-
-        window.addEventListener("message", async (event) => {
-            console.log("📩 Message reçu depuis :", event.origin);
-            console.log("🔍 Contenu complet du message :", event.data);
-            if (event.origin !== "http://localhost:3000") {
-                console.warn("Origine non autorisée :", event.origin);
-                return;
-            }
-        
-            const { type, address, chainId } = event.data;
-    
-            if (type !== "wallet_connected") return;
-        
-            if (!address || !chainId) {
-                reject("❌ Données incomplètes reçues depuis le popup !");
-                return;
-            }
-        
-            try {
-                clearTimeout(timeout);
-        
-                console.log("🔗 Adresse connectée :", address);
-                console.log("🆔 Chain ID :", chainId);
-        
-                const network = {
-                    name: "custom-network",
-                    chainId: parseInt(chainId),
-                };
-                const provider = new ethers.BrowserProvider(window.ethereum);
-                signer = await provider.getSigner(address);
-                contract = new ethers.Contract(contractAddress, abi, signer);
-        
-                updateUI(address);
-                document.getElementById("signMessage").disabled = false;
-        
-            } catch (error) {
-                console.error("Erreur lors de la connexion :", error);
-                reject(error);
-            }
-        });
-    });
-}
-
-document.getElementById("logoutButton").addEventListener("click", function () {
-    signer = null;
-    contract = null;
-    updateUI(null);
-    alert("Déconnexion effectuée !");
-});
-
-window.addEventListener("DOMContentLoaded", () => {
-    console.log("🔄 Réinitialisation de l'état au chargement");
-    signer = null;
-    contract = null;
-    updateUI(null);
-});
 
 async function signMessage() {
     const message = document.getElementById("messageInput").value.trim();
@@ -235,11 +189,19 @@ async function signMessage() {
         return;
     }
 
-    const messageHash = ethers.keccak256(ethers.toUtf8Bytes(message));
+    const messageHash = message;
     const signature = await signer.signMessage(ethers.getBytes(messageHash));
+    console.log("hash:", messageHash); 
 
     const expirationSelect = document.getElementById("expirationSelect");
     const expiration = Math.floor(Date.now() / 1000) + parseInt(expirationSelect.value);
+
+    console.log("📩 Données envoyées à storeSignature:");
+    console.log("→ messageHash:", messageHash);
+    console.log("→ signature:", signature);
+    console.log("→ authorizedRecipients:", authorizedRecipients);
+    console.log("→ expiration:", expiration);
+    console.log("→ contractAddress:", contractAddress);
 
     document.getElementById("status").innerHTML =
         '<div class="loader"></div>⏳ Transaction en cours...';
@@ -307,28 +269,5 @@ async function signMessage() {
     });
 }
 
-async function checkMetaMaskConnection() {
-    if (typeof window.ethereum === "undefined") {
-        console.log("MetaMask non détecté.");
-        return;
-    }
-
-    try {
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const accounts = await provider.send("eth_accounts", []);
-        
-        if (accounts.length > 0) {
-            signer = await provider.getSigner();
-            const address = await signer.getAddress();
-            contract = new ethers.Contract(contractAddress, abi, signer);
-            updateUI(address);
-            document.getElementById("signMessage").disabled = false;
-        }
-    } catch (error) {
-        console.error("Erreur lors de la récupération du compte :", error);
-    }
-}
-
-window.addEventListener("load", checkMetaMaskConnection);
 document.getElementById("signMessage").addEventListener("click", signMessage);
-document.addEventListener("DOMContentLoaded", connectMetaMask);
+// document.addEventListener("DOMContentLoaded", connectMetaMask);

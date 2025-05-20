@@ -45,17 +45,17 @@ const GeneratePage = () => {
   return (
 
     <Container>
-      <CustomText className="" Text="Générer une signature via MetaMask" />
+      <CustomText className="" Text="Générer une signature" />
       <p id="account"></p>
       <div style={{ padding: 10, marginBottom: 20 }}>
         <h2>Connexion Wallet</h2>
         {isConnected ? (
           <>
             <button onClick={handleDisconnect}>Déconnecter</button>
-            <button onClick={() => modal.open()}>Gérer mon compte Reown</button>
+            <button onClick={() => modal.open()}>Gérer mon wallet</button>
           </>
         ) : (
-          <button onClick={handleOpenModal}>Connecter avec Reown Wallet</button>
+          <button onClick={handleOpenModal}>Connecter le Wallet</button>
         )}
       </div>
 

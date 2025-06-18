@@ -191,7 +191,7 @@ async function signMessage() {
 
     const messageHash = message;
     const signature = await signer.signMessage(ethers.getBytes(messageHash));
-    console.log("hash:", messageHash); 
+    console.log("hash:", messageHash);
 
     const expirationSelect = document.getElementById("expirationSelect");
     const expiration = Math.floor(Date.now() / 1000) + parseInt(expirationSelect.value);

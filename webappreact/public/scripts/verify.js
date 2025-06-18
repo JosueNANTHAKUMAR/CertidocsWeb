@@ -133,11 +133,6 @@ async function verifySignature() {
     }
     messageHash = message;
     const userAddress = await signer.getAddress();
-    console.log("🔍 Données envoyées à verifySignature:");
-    console.log("→ signatureId:", signatureId);
-    console.log("→ messageHash:", messageHash);
-    console.log("→ userAddress:", userAddress);
-    console.log("→ contractAddress:", contractAddress);
     console.log("Hash du message :", messageHash);
     document.getElementById("verify").innerText = "⏳ Vérification en cours...";
     try {

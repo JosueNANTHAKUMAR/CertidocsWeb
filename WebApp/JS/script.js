@@ -1,5 +1,5 @@
 let signer, contract;
-const contractAddress = "0x7b63B543Ee68aa8C9faaAB12Ba73827F6973378f"; // 🔥 Remplace par ton contrat
+const contractAddress = "0x7b63B543Ee68aa8C9faaAB12Ba73827F6973378f"; // Remplace par ton contrat
 const abi = [
     "function storeSignature(bytes32, uint256, address[], bytes) external",
 ];
@@ -119,34 +119,79 @@ function updateUI(address) {
         document.getElementById("logoutButton").style.display = "block";
     } else {
         const connectButton = document.createElement("button");
-        connectButton.id = "connectMetaMask";
-        connectButton.innerText = "🔗 Se connecter à MetaMask";
+        connectButton.id = "connectWallet";
+        connectButton.innerText = "🔗 Se connecter au Wallet";
         connectButton.style.width = "100%";
-        connectButton.addEventListener("click", connectMetaMask);
+        connectButton.addEventListener("click", connectWallet);
         accountContainer.appendChild(connectButton);
         document.getElementById("logoutButton").style.display = "none";
     }
 }
 
-async function connectMetaMask() {
-    if (typeof window.ethereum === "undefined") {
-        alert("❌ MetaMask non détecté !");
-        return;
-    }
+async function connectWallet() {
+    const popup = window.open(
+        "http://localhost:3000/",
+        "Connexion",
+        "width=400,height=500"
+    );
 
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    signer = await provider.getSigner();
-    const address = await signer.getAddress();
-    contract = new ethers.Contract(contractAddress, abi, signer);
-    updateUI(address);
-    document.getElementById("signMessage").disabled = false;
+    return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject("⏰ Temps écoulé"), 50000);
+
+        window.addEventListener("message", async (event) => {
+            console.log("📩 Message reçu depuis :", event.origin);
+            console.log("🔍 Contenu complet du message :", event.data);
+            if (event.origin !== "http://localhost:3000") {
+                console.warn("Origine non autorisée :", event.origin);
+                return;
+            }
+        
+            const { type, address, chainId } = event.data;
+    
+            if (type !== "wallet_connected") return;
+        
+            if (!address || !chainId) {
+                reject("❌ Données incomplètes reçues depuis le popup !");
+                return;
+            }
+        
+            try {
+                clearTimeout(timeout);
+        
+                console.log("🔗 Adresse connectée :", address);
+                console.log("🆔 Chain ID :", chainId);
+        
+                const network = {
+                    name: "custom-network",
+                    chainId: parseInt(chainId),
+                };
+                const provider = new ethers.BrowserProvider(window.ethereum);
+                signer = await provider.getSigner(address);
+                contract = new ethers.Contract(contractAddress, abi, signer);
+        
+                updateUI(address);
+                document.getElementById("signMessage").disabled = false;
+        
+            } catch (error) {
+                console.error("Erreur lors de la connexion :", error);
+                reject(error);
+            }
+        });
+    });
 }
 
-document.getElementById("logoutButton").addEventListener("click", function () {
+document.getElementById("logoutButton").addEventListener("click", () => {
     signer = null;
     contract = null;
     updateUI(null);
     alert("Déconnexion effectuée !");
+});
+
+window.addEventListener("DOMContentLoaded", () => {
+    console.log("🔄 Réinitialisation de l'état au chargement");
+    signer = null;
+    contract = null;
+    updateUI(null);
 });
 
 async function signMessage() {
@@ -247,4 +292,4 @@ async function signMessage() {
 }
 
 document.getElementById("signMessage").addEventListener("click", signMessage);
-document.addEventListener("DOMContentLoaded", connectMetaMask);
+document.addEventListener("DOMContentLoaded", connectWallet);

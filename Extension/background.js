@@ -98,7 +98,7 @@ chrome.runtime.onMessage.addListener((request) => {
                     } else {
                         const hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(response.content));
                         chrome.windows.create({
-                            url: "http://localhost:8080/verify.html?messageHash=" + hash + "&signatureId=" + response.signatureId, // Remplace par l'URL que tu veux
+                            url: "http://localhost:8080/verify?messageHash=" + hash + "&signatureId=" + response.signatureId, // Remplace par l'URL que tu veux
                             type: "popup",
                             width: windowWidth,
                             height: windowHeight,

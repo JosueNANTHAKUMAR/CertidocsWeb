@@ -93,8 +93,17 @@ const GeneratePage = () => {
       {/* Onglets Mail / Texte juste sous le bouton Gérer mon wallet */}
       <Tabs activeTab={activeTab} onTabChange={setActiveTab} tabs={tabs} />
 
-      <CustomText className="fas fa-pen" Text="Message à signer électroniquement :" />
-      <CustomTextInput id="messageInput" rows="4" placeholder="Saisissez votre message..." />
+      {/* Ce conteneur cache le champ de texte si un message mail est présent */}
+      <div style={{ display: mailMessage ? 'none' : 'block' }}>
+        <CustomText className="fas fa-pen" Text="Message à signer électroniquement :" />
+        <CustomTextInput 
+          id="messageInput"
+          rows="4" 
+          placeholder="Saisissez votre message..." 
+          value={texteValue} 
+          onChange={(e) => setTexteValue(e.target.value)}
+        />
+      </div>
 
       <div id="confirmationMessage" style={{ display: 'none' }}></div>
 

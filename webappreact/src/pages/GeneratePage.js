@@ -9,11 +9,18 @@ import Container from "../component/Container";
 import CustomText from "../component/CustomText";
 import CustomTextInput from "../component/CustomTextInput";
 import { useAppKitAccount, useDisconnect, modal } from "@reown/appkit/react";
+import MailSection from '../component/MailSection';
+import TexteSection from '../component/TexteSection';
+import Tabs from '../component/Tabs';
+import '../component/Tabs.css';
 
 const GeneratePage = () => {
   const [expiration, setExpiration] = useState("3600");
   const { isConnected} = useAppKitAccount();
   const { disconnect } = useDisconnect();
+  const [activeTab, setActiveTab] = useState(0);
+  const [mailMessage, setMailMessage] = useState("");
+  const [texteValue, setTexteValue] = useState("");
 
   useEffect(() => {
     if (isConnected) {
@@ -21,6 +28,20 @@ const GeneratePage = () => {
       window.dispatchEvent(new Event('walletConnected'));
     }
   }, [isConnected]);
+
+  useEffect(() => {
+    // Ici, tu dois mettre la logique qui récupère le message de confirmation
+    // Par exemple, depuis une API, un state global, etc.
+    // Pour l'exemple, on check si le message de confirmation est dans le DOM
+    const confirmationDiv = document.getElementById("confirmationMessage");
+    if (confirmationDiv && confirmationDiv.style.display !== "none") {
+      setMailMessage("Votre message a bien été récupéré.");
+      setActiveTab(0); // Onglet Mail par défaut
+    } else {
+      setMailMessage("");
+      setActiveTab(1); // Onglet Texte par défaut
+    }
+  }, []);
 
   const handleOpenModal = () => {
     if (!modal) {
@@ -42,8 +63,18 @@ const GeneratePage = () => {
     }
   };
 
-  return (
+  const tabs = [
+    {
+      label: "Mail",
+      content: <MailSection message={mailMessage || "Votre message a bien été récupéré."} />,
+    },
+    {
+      label: "Texte",
+      content: <TexteSection value={texteValue} onChange={e => setTexteValue(e.target.value)} />,
+    },
+  ];
 
+  return (
     <Container>
       <CustomText className="" Text="Générer une signature" />
       <p id="account"></p>
@@ -58,6 +89,9 @@ const GeneratePage = () => {
           <button onClick={handleOpenModal}>Connecter le Wallet</button>
         )}
       </div>
+
+      {/* Onglets Mail / Texte juste sous le bouton Gérer mon wallet */}
+      <Tabs activeTab={activeTab} onTabChange={setActiveTab} tabs={tabs} />
 
       <CustomText className="fas fa-pen" Text="Message à signer électroniquement :" />
       <CustomTextInput id="messageInput" rows="4" placeholder="Saisissez votre message..." />

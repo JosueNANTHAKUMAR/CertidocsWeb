@@ -66,7 +66,7 @@ const GeneratePage = () => {
   const tabs = [
     {
       label: "Mail",
-      content: <MailSection message={mailMessage || "Votre message a bien été récupéré."} />,
+      content: <MailSection message={mailMessage} />,
     },
     {
       label: "Texte",
@@ -96,9 +96,7 @@ const GeneratePage = () => {
       <CustomText className="fas fa-pen" Text="Message à signer électroniquement :" />
       <CustomTextInput id="messageInput" rows="4" placeholder="Saisissez votre message..." />
 
-      <div id="confirmationMessage">
-        <span className="emoji">✅</span>Votre message a bien été récupéré.
-      </div>
+      <div id="confirmationMessage" style={{ display: 'none' }}></div>
 
       <CustomText className="fas fa-clock clock-icon" Text="Temps d'expiration :" />
       <select id="expirationSelect" value={expiration} onChange={(e) => setExpiration(e.target.value)}>

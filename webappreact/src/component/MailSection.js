@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './MailSection.css';
 import LoaderSignature from './LoaderSignature';
 
@@ -40,11 +40,13 @@ const getIconForStatus = (status) => {
 };
 
 
-const MailSection = ({ message }) => {
+const MailSection = ({ message, isConnected, active }) => {
   const [items, setItems] = useState([]);
   const [isDone, setIsDone] = useState(false);
+  const checklistRef = useRef(null);
 
   useEffect(() => {
+    if (!isConnected || !active) return;
     if (message) {
       // Initialise tous les items en 'waiting'
       const initialItems = CHECKLIST_ITEMS.map((label) => ({ label, status: 'waiting' }));
@@ -77,16 +79,25 @@ const MailSection = ({ message }) => {
 
       return () => timeouts.forEach(clearTimeout);
     }
-  }, [message]);
+  }, [message, isConnected, active]);
   
+  useEffect(() => {
+    if (active && checklistRef.current) {
+      checklistRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [active]);
+
   const progress = (items.filter(i => i.status === 'completed').length / CHECKLIST_ITEMS.length) * 100;
 
+  if (!isConnected) {
+    return <div style={{ color: 'var(--text-muted)', textAlign: 'center', margin: '1.5em 0' }}>Connectez votre wallet pour pouvoir signer un message</div>;
+  }
   if (!message || items.length === 0) {
     return null;
   }
 
   return (
-    <div className={`mail-section-loading ${isDone ? 'completed' : ''}`}>
+    <div ref={checklistRef} className={`mail-section-loading ${isDone ? 'completed' : ''}`}>
       <LoaderSignature loading={!isDone} success={isDone} />
       <div className="progress-bar-container">
         <div className={`progress-bar ${isDone ? 'completed' : ''}`} style={{ width: `${progress}%` }}></div>

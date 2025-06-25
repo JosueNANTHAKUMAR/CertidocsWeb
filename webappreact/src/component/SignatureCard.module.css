@@ -1,0 +1,142 @@
+.card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2.2em;
+  background: rgba(220,234,254,0.82);
+  border-radius: 1.3em;
+  box-shadow: 0 8px 32px #8A7FFF22, 0 0 0 2px #DCEAFE;
+  padding: 1.3em 1.7em 1.3em 1.7em;
+  margin: 1.5em 0 0.7em 0;
+  min-width: 0;
+  max-width: 100%;
+  animation: fadeInCard 0.7s cubic-bezier(.4,2,.3,1);
+  backdrop-filter: blur(14px);
+  position: relative;
+  border: 1.5px solid #DCEAFE;
+  transition: box-shadow 0.18s, background 0.18s, border 0.18s;
+}
+.card:hover, .card:focus-within {
+  box-shadow: 0 12px 48px #8A7FFF44, 0 0 0 3px #16D9E3;
+  border: 1.5px solid #16D9E3;
+  background: rgba(220,234,254,0.95);
+}
+@keyframes fadeInCard {
+  from { opacity: 0; transform: scale(0.95) translateY(18px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.contentWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  flex: 1 1 auto;
+  gap: 0.18em;
+}
+.label {
+  color: #8A7FFF;
+  font-weight: 600;
+  font-size: 1.01em;
+  letter-spacing: 0.01em;
+  margin-bottom: 0.13em;
+  opacity: 0.82;
+}
+.value {
+  font-family: 'Fira Mono', 'Menlo', monospace;
+  color: #16D9E3;
+  font-size: 1.22em;
+  background: rgba(22,217,227,0.10);
+  border-radius: 8px;
+  padding: 0.13em 1.1em;
+  letter-spacing: 0.7px;
+  font-weight: 700;
+  user-select: all;
+  min-width: 0;
+  box-shadow: 0 1px 8px #16D9E311;
+}
+.copyBtn {
+  background: linear-gradient(90deg, #8A7FFF 0%, #16D9E3 100%);
+  color: #fff;
+  border-radius: 999px;
+  border: none;
+  font-weight: 700;
+  font-size: 1.08em;
+  padding: 0.7em 1.7em;
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+  box-shadow: 0 2px 12px #8A7FFF33;
+  cursor: pointer;
+  transition: transform 0.18s, box-shadow 0.18s, background 0.18s, border 0.18s;
+  position: relative;
+  outline: none;
+  min-width: 0;
+  border: 2px solid transparent;
+  font-family: inherit;
+}
+.copyBtn:hover, .copyBtn:focus {
+  background: linear-gradient(90deg, #16D9E3 0%, #8A7FFF 100%);
+  transform: scale(1.045);
+  box-shadow: 0 8px 32px #16D9E355;
+  border: 2px solid #DCEAFE;
+}
+.copyBtn:active {
+  transform: scale(0.98);
+}
+.copied {
+  background: linear-gradient(90deg, #16D9E3 0%, #8A7FFF 100%);
+  color: #fff;
+}
+.btnIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25em;
+  margin-right: 0.18em;
+  transition: transform 0.22s cubic-bezier(.4,2,.3,1);
+}
+.copyBtn:not(.copied):hover .btnIcon {
+  transform: scale(1.18) rotate(-8deg);
+}
+.clipboardSvg, .checkSvg {
+  width: 1.5em;
+  height: 1.5em;
+  display: block;
+}
+.btnText {
+  font-weight: 700;
+  font-size: 1.08em;
+  letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  transition: color 0.18s;
+}
+.copyBtn .btnText {
+  margin-left: 0.1em;
+}
+.copyBtn.copied .btnText {
+  animation: fadeScaleIn 0.4s cubic-bezier(.4,2,.3,1);
+  color: #fff;
+}
+@keyframes fadeScaleIn {
+  from { opacity: 0; transform: scale(0.7); }
+  to { opacity: 1; transform: scale(1); }
+}
+@media (max-width: 700px) {
+  .card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.1em;
+    padding: 1.1em 0.7em;
+  }
+  .contentWrap {
+    align-items: center;
+    text-align: center;
+  }
+  .copyBtn {
+    width: 100%;
+    justify-content: center;
+    font-size: 1em;
+    padding: 0.8em 0;
+  }
+} 

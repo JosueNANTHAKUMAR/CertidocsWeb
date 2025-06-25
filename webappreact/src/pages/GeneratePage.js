@@ -18,6 +18,7 @@ import confetti from "canvas-confetti";
 import LoaderSignature from '../component/LoaderSignature';
 import PDFSection from '../component/PdfPage/PDFSection';
 import ImageSection from '../component/PdfPage/ImageSection';
+import SignatureCard from '../component/SignatureCard';
 
 const GeneratePage = () => {
   const [expiration, setExpiration] = useState("3600");
@@ -145,7 +146,7 @@ const GeneratePage = () => {
   const tabs = [
     {
       label: <><span className="tab-icon"><FaEnvelope /></span>Mail</>,
-      content: <MailSection message={mailMessage} />,
+      content: <MailSection message={mailMessage} isConnected={isConnected} active={activeTab === 0} />,
     },
     {
       label: <><span className="tab-icon"><FaFont /></span>Texte</>,
@@ -160,6 +161,14 @@ const GeneratePage = () => {
       content: <ImageSection value={imageFile} onChange={setImageFile} />,
     },
   ];
+
+  useEffect(() => {
+    if (signed) {
+      setTimeout(() => {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      }, 300); // Laisse le temps à l'animation de check d'apparaître
+    }
+  }, [signed]);
 
   return (
     <div className="container">
@@ -335,38 +344,7 @@ const GeneratePage = () => {
       )}
       {/* Résultat signature */}
       {signed && signature && (
-        <div className="signature-result-2025">
-          {/* Check animé */}
-          <svg className="signature-check-2025" viewBox="0 0 32 32">
-            <path
-              d="M7 17 L14 24 L25 9"
-              fill="none"
-              stroke="#7fffa7"
-              strokeWidth="3.5"
-              strokeLinecap="round"
-            />
-          </svg>
-          <div>
-            <div className="signature-label-2025">
-              Votre signature
-              <span className="signature-value-2025">
-                {signature.slice(0, 8)}...{signature.slice(-4)}
-              </span>
-            </div>
-          </div>
-          <button
-            className="signature-copy-btn-2025"
-            onClick={handleCopySignature}
-            style={{ marginLeft: 12, position: 'relative' }}
-            title="Copier la signature"
-          >
-            <FaRegCopy />
-            Copier la signature
-            {copySig && (
-              <span className="signature-copied-tooltip-2025">Copié !</span>
-            )}
-          </button>
-        </div>
+        <SignatureCard signature={signature} onCopy={launchConfetti} />
       )}
       <p id="status" style={{ minHeight: 18, color: 'var(--accent)', fontWeight: 500, fontSize: 13 }}></p>
       <div id="copyMessage"></div>

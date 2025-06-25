@@ -53,9 +53,6 @@ const messageHash = urlParams.get("messageHash");
 if (messageHash) {
     document.getElementById("messageInput").value = messageHash;
     document.getElementById("messageInput").style.display = "none";
-    document.getElementById("confirmationMessage").style.display = "block";
-} else {
-    document.getElementById("confirmationMessage").style.display = "none";
 }
 
 function createAddressSpan(address, addressShort) {

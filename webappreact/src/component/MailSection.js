@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './MailSection.css';
+import LoaderSignature from './LoaderSignature';
 
 const CHECKLIST_ITEMS = [
   "Récupération du message...",
@@ -86,6 +87,7 @@ const MailSection = ({ message }) => {
 
   return (
     <div className={`mail-section-loading ${isDone ? 'completed' : ''}`}>
+      <LoaderSignature loading={!isDone} success={isDone} />
       <div className="progress-bar-container">
         <div className={`progress-bar ${isDone ? 'completed' : ''}`} style={{ width: `${progress}%` }}></div>
       </div>

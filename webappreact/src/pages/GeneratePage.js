@@ -6,7 +6,6 @@ import "../CSS/copyButton.css";
 import "../CSS/status.css";
 import "../CSS/logoutButton.css";
 import "../CSS/modern2025.css";
-import Container from "../component/Container";
 import CustomText from "../component/CustomText";
 import CustomTextInput from "../component/CustomTextInput";
 import { useAppKitAccount, useDisconnect, modal } from "@reown/appkit/react";
@@ -14,10 +13,11 @@ import MailSection from '../component/MailSection';
 import TexteSection from '../component/TexteSection';
 import Tabs from '../component/Tabs';
 import '../component/Tabs.css';
-import { FaWallet, FaSignOutAlt, FaCog, FaRegCopy, FaEye } from "react-icons/fa";
+import { FaWallet, FaSignOutAlt, FaCog, FaRegCopy, FaEye, FaEnvelope, FaFont, FaFilePdf, FaImage } from "react-icons/fa";
 import confetti from "canvas-confetti";
 import LoaderSignature from '../component/LoaderSignature';
 import PDFSection from '../component/PdfPage/PDFSection';
+import ImageSection from '../component/PdfPage/ImageSection';
 
 const GeneratePage = () => {
   const [expiration, setExpiration] = useState("3600");
@@ -34,6 +34,7 @@ const GeneratePage = () => {
   const [signature, setSignature] = useState("");
   const [checklistStep, setChecklistStep] = useState(0);
   const [pdfFile, setPdfFile] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
   const checklist = [
     "Préparation du message...",
     "Génération de la signature...",
@@ -143,16 +144,20 @@ const GeneratePage = () => {
 
   const tabs = [
     {
-      label: "Mail",
+      label: <><span className="tab-icon"><FaEnvelope /></span>Mail</>,
       content: <MailSection message={mailMessage} />,
     },
     {
-      label: "Texte",
+      label: <><span className="tab-icon"><FaFont /></span>Texte</>,
       content: <TexteSection value={texteValue} onChange={e => setTexteValue(e.target.value)} />,
     },
     {
-      label: "PDF",
+      label: <><span className="tab-icon"><FaFilePdf /></span>PDF</>,
       content: <PDFSection value={pdfFile} onChange={setPdfFile} />,
+    },
+    {
+      label: <><span className="tab-icon"><FaImage /></span>Image</>,
+      content: <ImageSection value={imageFile} onChange={setImageFile} />,
     },
   ];
 

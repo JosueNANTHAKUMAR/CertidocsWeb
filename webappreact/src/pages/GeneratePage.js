@@ -45,8 +45,16 @@ const GeneratePage = () => {
 
   useEffect(() => {
     if (isConnected) {
-      // Quand connexion est faite → on notifie le script.js
       window.dispatchEvent(new Event('walletConnected'));
+      setActiveTab(0); // Active l'onglet Mail
+      setTimeout(() => {
+        const checklist = document.querySelector('.mail-section-loading');
+        if (checklist) {
+          checklist.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          checklist.classList.add('scroll-highlight-2025');
+          setTimeout(() => checklist.classList.remove('scroll-highlight-2025'), 1300);
+        }
+      }, 400); // Laisse le temps au rendu
     }
   }, [isConnected]);
 
@@ -169,6 +177,19 @@ const GeneratePage = () => {
       }, 300); // Laisse le temps à l'animation de check d'apparaître
     }
   }, [signed]);
+
+  useEffect(() => {
+    const scrollToSignButton = () => {
+      const btn = document.getElementById('signMessage');
+      if (btn) {
+        btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        btn.classList.add('scroll-highlight-2025');
+        setTimeout(() => btn.classList.remove('scroll-highlight-2025'), 1300);
+      }
+    };
+    window.addEventListener('checklistDone', scrollToSignButton);
+    return () => window.removeEventListener('checklistDone', scrollToSignButton);
+  }, []);
 
   return (
     <div className="container">

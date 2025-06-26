@@ -10,7 +10,7 @@ import CustomTextInput from "../component/CustomTextInput";
 function VerifyPage() {
   return (
     <Container>
-      <CustomText className="" Text="Vérifier une signature via MetaMask" />
+      <CustomText className="" Text="Vérifier une signature" />
       <p id="account"></p>
       
       <CustomText className="" Text="Entrez l'ID de la signature :" />

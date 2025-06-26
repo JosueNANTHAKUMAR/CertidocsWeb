@@ -37,7 +37,7 @@ chrome.runtime.onMessage.addListener((request) => {
                     console.log("Contenu de la div:", response.content);
                     if (response.content === "Aucune div trouvée") {
                         chrome.windows.create({
-                            url: "http://localhost:8080/", // Remplace par l'URL que tu veux
+                            url: "http://localhost:8081/", // Remplace par l'URL que tu veux
                             type: "popup",
                             width: windowWidth,
                             height: windowHeight,
@@ -48,7 +48,7 @@ chrome.runtime.onMessage.addListener((request) => {
                     } else {
                         const hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(response.content));
                         chrome.windows.create({
-                            url: "http://localhost:8080/?messageHash=" + hash, // Remplace par l'URL que tu veux
+                            url: "http://localhost:8081/?messageHash=" + hash, // Remplace par l'URL que tu veux
                             type: "popup",
                             width: windowWidth,
                             height: windowHeight,
@@ -87,7 +87,7 @@ chrome.runtime.onMessage.addListener((request) => {
                     console.log("SignatureId:", response.signatureId);
                     if (response.content === "Aucune div trouvée") {
                         chrome.windows.create({
-                            url: "http://localhost:8080/verify", // Remplace par l'URL que tu veux
+                            url: "http://localhost:8081/verify", // Remplace par l'URL que tu veux
                             type: "popup",
                             width: windowWidth,
                             height: windowHeight,
@@ -98,7 +98,7 @@ chrome.runtime.onMessage.addListener((request) => {
                     } else {
                         const hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(response.content));
                         chrome.windows.create({
-                            url: "http://localhost:8080/verify?messageHash=" + hash + "&signatureId=" + response.signatureId, // Remplace par l'URL que tu veux
+                            url: "http://localhost:8081/verify?messageHash=" + hash + "&signatureId=" + response.signatureId, // Remplace par l'URL que tu veux
                             type: "popup",
                             width: windowWidth,
                             height: windowHeight,

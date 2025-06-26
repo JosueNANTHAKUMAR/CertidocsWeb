@@ -15,10 +15,10 @@ if (signatureIdVar) {
     document.getElementById("signatureId").value = signatureIdVar.split("[CERTIDOCS]")[1];
 }
 
-async function connectMetaMask() {
+async function connectWallet() {
     if (typeof window.ethereum === "undefined") {
         alert(
-            "❌ MetaMask non détecté ! Essaie d'actualiser la page ou vérifie ton installation."
+            "❌ Wallet non détecté ! Essaie d'actualiser la page ou vérifie ton installation."
         );
         return;
     }
@@ -131,4 +131,4 @@ async function verifySignature() {
 document
     .getElementById("verifySignature")
     .addEventListener("click", verifySignature);
-document.addEventListener("DOMContentLoaded", connectMetaMask);
+document.addEventListener("DOMContentLoaded", connectWallet);

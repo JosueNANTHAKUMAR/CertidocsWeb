@@ -15,6 +15,24 @@ if (typeof abi === "undefined") {
     ];
 }
 
+window.addEventListener('walletConnected', async () => {
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    signer = await provider.getSigner();
+    const address = await signer.getAddress();
+    console.log(address);
+    contract = new ethers.Contract(contractAddress, abi, signer);
+    console.log("✅ Connexion établie via script.js :", { provider, signer, address, contract });
+
+    updateUI(address);
+    document.getElementById("signMessage").disabled = false;
+});
+
+window.addEventListener('walletDisconnected', () => {
+    signer = null;
+    contract = null;
+    updateUI(null);
+    document.getElementById("signMessage").disabled = true;
+});
 
 async function hideTextInImage(imageUrl, text) {
     const img = new Image();
@@ -59,7 +77,7 @@ async function hideTextInImage(imageUrl, text) {
     });
 }
 
-// retrieve the variable inside url wich is formatted like localhost:8080/?messageHash=0x1234567890
+// retrieve the variable inside url wich is formatted like localhost:8081/?messageHash=0x1234567890
 if (typeof urlParams === "undefined") {
     var urlParams = new URLSearchParams(window.location.search);
 }
@@ -125,6 +143,8 @@ function createCopyButton(address) {
 
 function updateUI(address) {
     const accountContainer = document.getElementById("account");
+    if (!accountContainer) return;
+
     accountContainer.innerHTML = "";
 
     if (address) {
@@ -133,38 +153,17 @@ function updateUI(address) {
         const copyButton = createCopyButton(address);
         accountContainer.appendChild(addressSpan);
         accountContainer.appendChild(copyButton);
-        document.getElementById("logoutButton").style.display = "block";
+
+        // Affiche le bouton "signer"
+        const signBtn = document.getElementById("signMessage");
+        if (signBtn) signBtn.disabled = false;
+
     } else {
-        const connectButton = document.createElement("button");
-        connectButton.id = "connectMetaMask";
-        connectButton.innerText = "🔗 Se connecter à MetaMask";
-        connectButton.style.width = "100%";
-        connectButton.addEventListener("click", connectMetaMask);
-        accountContainer.appendChild(connectButton);
-        document.getElementById("logoutButton").style.display = "none";
+        // Si déconnecté → on vide simplement l'UI (pas de bouton "connecter MetaMask")
+        const signBtn = document.getElementById("signMessage");
+        if (signBtn) signBtn.disabled = true;
     }
 }
-
-async function connectMetaMask() {
-    if (typeof window.ethereum === "undefined") {
-        alert("❌ MetaMask non détecté !");
-        return;
-    }
-
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    signer = await provider.getSigner();
-    const address = await signer.getAddress();
-    contract = new ethers.Contract(contractAddress, abi, signer);
-    updateUI(address);
-    document.getElementById("signMessage").disabled = false;
-}
-
-document.getElementById("logoutButton").addEventListener("click", function () {
-    signer = null;
-    contract = null;
-    updateUI(null);
-    alert("Déconnexion effectuée !");
-});
 
 async function signMessage() {
     const message = document.getElementById("messageInput").value.trim();
@@ -196,6 +195,13 @@ async function signMessage() {
 
     const expirationSelect = document.getElementById("expirationSelect");
     const expiration = Math.floor(Date.now() / 1000) + parseInt(expirationSelect.value);
+
+    console.log("📩 Données envoyées à storeSignature:");
+    console.log("→ messageHash:", messageHash);
+    console.log("→ signature:", signature);
+    console.log("→ authorizedRecipients:", authorizedRecipients);
+    console.log("→ expiration:", expiration);
+    console.log("→ contractAddress:", contractAddress);
 
     document.getElementById("status").innerHTML =
         '<div class="loader"></div>⏳ Transaction en cours...';
@@ -232,30 +238,86 @@ async function signMessage() {
             for (let i = signatureId.length - 4; i < signatureId.length; i++) {
                 signatureIdString += signatureId[i];
             }
-            document.getElementById("status").innerText =
-                "✅ Votre signature : " + signatureIdString;
 
-            const copyButton = document.createElement("button");
-            copyButton.className = "copy-button";
-            copyButton.innerText = "📋 Copié la signature !";
-            document.getElementById("status").appendChild(copyButton);
-            copyButton.onclick = () => {
-                hideTextInImage("http://localhost:8080/DEFAULT_SIGNATURE.png", "[CERTIDOCS]" + signatureId).then(() => {
-                    const confirmationMessage = document.createElement("div");
-                    confirmationMessage.className = "copy-confirmation";
-                    confirmationMessage.innerText = "✅ Signature copiée !";
-                    document.getElementById("status").appendChild(confirmationMessage);
-                    confirmationMessage.style.display = "block";
+            // Nouveau container pro pour la signature et le bouton
+            const status = document.getElementById("status");
+            status.innerHTML = "";
+            status.style.display = "flex";
+            status.style.position = "relative";
+
+            const container = document.createElement("div");
+            container.className = "signature-copy-container";
+
+            const sigSpan = document.createElement("span");
+            sigSpan.className = "signature-id";
+            sigSpan.innerText = signatureIdString;
+            sigSpan.title = signatureId;
+            container.appendChild(sigSpan);
+
+            const copyBtn = document.createElement("button");
+            copyBtn.className = "signature-copy-btn";
+            copyBtn.setAttribute("aria-label", "Copier la signature");
+            copyBtn.innerHTML = '<span class="icon"><i class="fas fa-copy"></i></span> Copier';
+            container.appendChild(copyBtn);
+
+            // Toast
+            const toast = document.createElement("div");
+            toast.className = "signature-toast";
+            toast.innerText = "✅ Signature copiée dans l'image !";
+            toast.style.display = "none";
+            container.appendChild(toast);
+
+            copyBtn.onclick = () => {
+                // Animation bouton
+                copyBtn.classList.add("copied");
+                copyBtn.innerHTML = '<span class="icon"><i class="fas fa-check-circle"></i></span> Copié!';
+                setTimeout(() => {
+                    copyBtn.classList.remove("copied");
+                    copyBtn.innerHTML = '<span class="icon"><i class="fas fa-copy"></i></span> Copier';
+                }, 1800);
+                // Toast animé
+                toast.style.display = "block";
+                toast.classList.remove("hide");
+                setTimeout(() => {
+                    toast.classList.add("hide");
                     setTimeout(() => {
-                        copyButton.innerText = "📋 Copier la signature";
-                        confirmationMessage.style.display = "none";
-                    }, 2000);
-                }).catch((error) => {
-                    console.error(error);
-                    alert("❌ Erreur lors de la copie de la signature !");
-                });
+                        toast.style.display = "none";
+                        toast.classList.remove("hide");
+                    }, 400);
+                }, 1600);
+                // Copie dans l'image
+                hideTextInImage("http://localhost:8081/DEFAULT_SIGNATURE.png", "[CERTIDOCS]" + signatureId)
+                    .catch((error) => {
+                        toast.innerText = "❌ Erreur lors de la copie !";
+                        toast.style.background = "#ffeaea";
+                        toast.style.color = "#d32f2f";
+                        toast.style.display = "block";
+                        setTimeout(() => {
+                            toast.classList.add("hide");
+                            setTimeout(() => {
+                                toast.style.display = "none";
+                                toast.classList.remove("hide");
+                                toast.innerText = "✅ Signature copiée dans l'image !";
+                                toast.style.background = "#fff";
+                                toast.style.color = "#7a67e4";
+                            }, 400);
+                        }, 2000);
+                    });
             };
-            document.getElementById("status").appendChild(copyButton);
+
+            // Ajout de l'indication professionnelle en italique
+            const indication = document.createElement("div");
+            indication.style.fontStyle = "italic";
+            indication.style.color = "#6b7280";
+            indication.style.fontSize = "0.98em";
+            indication.style.marginTop = "18px";
+            indication.style.width = "100%";
+            indication.style.display = "block";
+            indication.style.textAlign = "center";
+            indication.innerText = "Veuillez copier et coller la signature dans votre mail.";
+            container.appendChild(indication);
+
+            status.appendChild(container);
         } catch (error) {
             console.error(error);
             document.getElementById("status").innerText = "❌ Erreur lors du stockage.";
@@ -264,4 +326,4 @@ async function signMessage() {
 }
 
 document.getElementById("signMessage").addEventListener("click", signMessage);
-document.addEventListener("DOMContentLoaded", connectMetaMask);
+// document.addEventListener("DOMContentLoaded", connectMetaMask);

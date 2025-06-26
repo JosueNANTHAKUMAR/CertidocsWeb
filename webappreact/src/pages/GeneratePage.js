@@ -141,16 +141,6 @@ const GeneratePage = () => {
     launchConfetti();
   };
 
-  const [copySig, setCopySig] = useState(false);
-  const handleCopySignature = () => {
-    if (signature) {
-      navigator.clipboard.writeText(signature);
-      setCopySig(true);
-      launchConfetti();
-      setTimeout(() => setCopySig(false), 1200);
-    }
-  };
-
   const tabs = [
     {
       label: <><span className="tab-icon"><FaEnvelope /></span>Mail</>,

@@ -1,18 +1,66 @@
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.action === "getDivContentGenerate") {
+  if (message.action === "getDivContentGenerate") {
+    let resolved = false;
 
-        // recupere la deuxieme div avec la classe 'Am aiL Al editable LW-avf tS-tW' et recupere son contenu
-        try {
-            const divs = document.querySelectorAll("div.Am.aiL.Al.editable.LW-avf.tS-tW");
-            // recupere le contenu de la derniere div
-            const content = divs[divs.length - 1].innerText;
-            console.log("Contenu de la div:", content);
-            sendResponse({ content: content });
-        } catch (error) {
-            sendResponse({ content: "Aucune div trouvée" });
-        }
+    // ✅ GMAIL
+    try {
+      const divs = document.querySelectorAll("div.Am.aiL.Al.editable.LW-avf.tS-tW");
+      if (divs.length) {
+        const content = normalizeMessage(divs[divs.length - 1].innerText);
+        console.log("✅ Gmail trouvé !");
+        sendResponse({ content : content });
+        resolved = true;
+        return true;
+      }
+    } catch (error) {
+      console.warn("❌ Gmail div introuvable");
     }
+
+    // ✅ OUTLOOK
+    function tryGetOutlookContent() {
+      if (resolved) return true; // on a déjà répondu (évite double réponse)
+
+      const outlookDivs = document.querySelectorAll('div[contenteditable="true"][role="textbox"]');
+      for (const el of outlookDivs) {
+        const aria = el.getAttribute("aria-label") || "";
+        if (
+          aria.toLowerCase().includes("corps du message") ||
+          aria.toLowerCase().includes("message body")
+        ) {
+          let content = normalizeMessage(el.innerText || "");
+
+          console.log("✅ Outlook trouvé !");
+          sendResponse({ content : content });
+          resolved = true;
+          return true;
+        }
+      }
+      return false;
+    }
+
+    if (tryGetOutlookContent()) return true;
+
+    // ⏳ Attente DOM Outlook
+    const observer = new MutationObserver(() => {
+      if (tryGetOutlookContent()) observer.disconnect();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return true;
+  }
 });
+
+function normalizeMessage(content) {
+    return content
+      .replace(/\r\n/g, "\n")            // CRLF to LF
+      .replace(/\n{2,}/g, "\n")          // multiple line breaks → single
+      .replace(/[ \t]{2,}/g, " ")        // multiple spaces → one
+      .replace(/\u200B/g, "")            // zero-width space
+      .replace(/\u00A0/g, " ")           // non-breaking space
+      .replace(/\s+$/, "")               // trailing whitespace
+      .replace(/^\s+/, "")               // leading whitespace
+      .normalize("NFC");
+}
 
 async function extractTextFromImage(imageUrl) {
     const img = new Image();
@@ -46,61 +94,95 @@ async function extractTextFromImage(imageUrl) {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "getDivContentVerify") {
-        // recupere la premiere div avec la classe 'ii gt' et recupere son contenu
+        console.log("[getDivContentVerify] Début récupération...");
+
         try {
-            const divs = document.querySelectorAll("div.ii.gt");
-            // recupere le contenu de la premiere div
-            let content = divs[0].innerText;
-            // remove "Télécharger\nAjouter à Drive\nEnregistrer dans Photos" from the content
-            content = content.replace("Télécharger\nAjouter à Drive\nEnregistrer dans Photos\n", "");
-            content = content.replace("Télécharger\nAjouter à Drive\nEnregistrer dans Photos", "");
-            content = content.replace("Analyse antivirus en cours...\nAjouter à Drive\nEnregistrer dans Photos\n", "");
-            content = content.replace("Analyse antivirus en cours...\nAjouter à Drive\nEnregistrer dans Photos", "");
-            // get image in the div
-            const images = divs[0].querySelectorAll("img");
-            // get the image src attribute
-            const src = images[0].getAttribute("src");
-            
-            extractTextFromImage(src).then(text => {
-                console.log("Texte extrait de l'image:", text);
-                console.log("Contenu de la div:", content);
-                // now inside the div, from '[CERTIDOCS]' to the end of the string replace every thing by an image
-                sendResponse({ content: content, signatureId: text});
-                console.log("Contenu de la div:", content);
-            }).catch(error => {
-                console.error(error);
-                sendResponse({ content: "Erreur lors de l'extraction du texte de l'image", signatureId: "" });
-            });
+            let content = "", src = "";
+
+            const gmailDiv = document.querySelector("div.ii.gt");
+            if (gmailDiv) {
+                // On filtre sur le premier <div dir="ltr"> à l'intérieur de gmailDiv
+                const mainDiv = gmailDiv.querySelector('div[dir="ltr"]');
+                if (mainDiv) {
+                    content = mainDiv.innerText || "";
+                    const img = mainDiv.querySelector("img");
+                    if (img) src = img.getAttribute("src") || "";
+                } else {
+                    content = gmailDiv.innerText || "";
+                    const img = gmailDiv.querySelector("img");
+                    if (img) src = img.getAttribute("src") || "";
+                }
+            }
+
+            if (!content) {
+                const rpsDiv = document.querySelector('div[class^="rps_"]');
+                if (rpsDiv) {
+                    for (const el of rpsDiv.querySelectorAll('x_elementToProof')) {
+                        const img = el.querySelector('img');
+                        if (img) { src = img.getAttribute('src') || ""; break; }
+                        if (el.innerText.trim()) content += el.innerText.trim() + "\n";
+                    }
+                    content = content.trim();
+                    content = normalizeMessage(content);
+                }
+            }
+
+            if (!content && !src) {
+                const img = document.querySelector('img.Do8Zj');
+                if (img) {
+                    src = img.getAttribute("src") || "";
+                    const parent = img.closest('div[class^="rps_"], div[role="document"], div.x_WordSection1');
+                    if (parent) content = parent.innerText.trim();
+                }
+            }
+
+            if (!content) {
+                console.warn("[getDivContentVerify] Aucun contenu trouvé.");
+                sendResponse({ content: "Aucune div trouvée", signatureId: "" });
+                return;
+            }
+
+            console.log("[getDivContentVerify] Contenu récupéré :", content);
+
+            content = content.replace(/Télécharger\nAjouter à Drive\nEnregistrer dans Photos\n?/g, "")
+                             .replace(/Analyse antivirus en cours...\nAjouter à Drive\nEnregistrer dans Photos\n?/g, "");
+
+            if (src) {
+                extractTextFromImage(src).then(text => {
+                    console.log("✅ Signature extraite :", text);
+                    content = normalizeMessage(content);
+                    sendResponse({ content: content, signatureId: text });
+                }).catch(() => {
+                    console.error("[getDivContentVerify] Erreur extraction image");
+                    sendResponse({ content: content, signatureId: "" });
+                });
+            } else {
+                console.warn("[getDivContentVerify] Pas d'image trouvée.");
+                sendResponse({ content: content, signatureId: "" });
+            }
+
             return true;
-        } catch (error) {
-            sendResponse({ content: "Aucune div trouvée", signatureId: "" });
+        } catch (e) {
+            console.error("[getDivContentVerify] Exception :", e);
+            sendResponse({ content: "Erreur récupération", signatureId: "" });
         }
     }
 });
 
 function replaceCertidocsInTextNodes(node) {
     if (node.nodeType === Node.TEXT_NODE) {
-        let text = node.nodeValue;
-        if (text.includes("[CERTIDOCS]")) {
-            // get the parent node
-            const parent = node.parentNode;
-            // get the parent of the parent node
-            const grandParent = parent.parentNode;
-            // check if grandParent is a div with the class 'Am aiL Al editable LW-avf tS-tW'
-            console.log(grandParent.classList);
-            if (grandParent.classList.contains("Am") && grandParent.classList.contains("aiL") && grandParent.classList.contains("Al") && grandParent.classList.contains("editable") && grandParent.classList.contains("LW-avf") && grandParent.classList.contains("tS-tW")) {
-                return;
-            }
+        const text = node.nodeValue;
+        if (!text.includes("[CERTIDOCS]")) return;
+        const grandParent = node.parentNode?.parentNode;
+        const isGmail = grandParent?.classList.contains("Am") && grandParent.classList.contains("aiL");
+        const isOutlook = grandParent?.getAttribute("role") === "textbox";
+        if (!isGmail && !isOutlook) return;
 
-            let span = document.createElement("span");
-            span.innerHTML = text.replace(/\[CERTIDOCS\]/g, "[SIGNATURE]");
-            // span.innerHTML = "JOSUE"
-            // span.innerHTML = text.replace(/\[CERTIDOCS\]/g, `<img src="https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.flaticon.com%2Ffree-icon%2Funlock_9970524&psig=AOvVaw3qGnOZf7FotPVMwXcLtOq1&ust=1739456516209000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCLjEydCqvosDFQAAAAAdAAAAABBR" alt="🔒" style="width: 16px; height: 16px; vertical-align: middle;">`);
-            // Remplacer uniquement le nœud texte par le <span>
-            node.parentNode.replaceChild(span, node);
-        }
+        const span = document.createElement("span");
+        span.innerHTML = text.replace(/\[CERTIDOCS\]/g, "[SIGNATURE]");
+        node.parentNode.replaceChild(span, node);
+        console.log("🔄 [replaceCertidocs] Remplacement effectué !");
     } else {
-        // Parcourir récursivement les enfants du nœud
         node.childNodes.forEach(replaceCertidocsInTextNodes);
     }
 }
@@ -109,13 +191,6 @@ function replaceCertidocs() {
     replaceCertidocsInTextNodes(document.body);
 }
 
-// Observer les changements du DOM
-const observer = new MutationObserver(() => {
-    replaceCertidocs();
-});
-
-// Lancer l'observation du body
+const observer = new MutationObserver(() => replaceCertidocs());
 observer.observe(document.body, { childList: true, subtree: true });
-
-// Exécuter une première fois au chargement
 window.addEventListener("load", replaceCertidocs);

@@ -238,30 +238,86 @@ async function signMessage() {
             for (let i = signatureId.length - 4; i < signatureId.length; i++) {
                 signatureIdString += signatureId[i];
             }
-            document.getElementById("status").innerText =
-                "✅ Votre signature : " + signatureIdString;
 
-            const copyButton = document.createElement("button");
-            copyButton.className = "copy-button";
-            copyButton.innerText = "📋 Copié la signature !";
-            document.getElementById("status").appendChild(copyButton);
-            copyButton.onclick = () => {
-                hideTextInImage("http://localhost:8080/DEFAULT_SIGNATURE.png", "[CERTIDOCS]" + signatureId).then(() => {
-                    const confirmationMessage = document.createElement("div");
-                    confirmationMessage.className = "copy-confirmation";
-                    confirmationMessage.innerText = "✅ Signature copiée !";
-                    document.getElementById("status").appendChild(confirmationMessage);
-                    confirmationMessage.style.display = "block";
+            // Nouveau container pro pour la signature et le bouton
+            const status = document.getElementById("status");
+            status.innerHTML = "";
+            status.style.display = "flex";
+            status.style.position = "relative";
+
+            const container = document.createElement("div");
+            container.className = "signature-copy-container";
+
+            const sigSpan = document.createElement("span");
+            sigSpan.className = "signature-id";
+            sigSpan.innerText = signatureIdString;
+            sigSpan.title = signatureId;
+            container.appendChild(sigSpan);
+
+            const copyBtn = document.createElement("button");
+            copyBtn.className = "signature-copy-btn";
+            copyBtn.setAttribute("aria-label", "Copier la signature");
+            copyBtn.innerHTML = '<span class="icon"><i class="fas fa-copy"></i></span> Copier';
+            container.appendChild(copyBtn);
+
+            // Toast
+            const toast = document.createElement("div");
+            toast.className = "signature-toast";
+            toast.innerText = "✅ Signature copiée dans l'image !";
+            toast.style.display = "none";
+            container.appendChild(toast);
+
+            copyBtn.onclick = () => {
+                // Animation bouton
+                copyBtn.classList.add("copied");
+                copyBtn.innerHTML = '<span class="icon"><i class="fas fa-check-circle"></i></span> Copié!';
+                setTimeout(() => {
+                    copyBtn.classList.remove("copied");
+                    copyBtn.innerHTML = '<span class="icon"><i class="fas fa-copy"></i></span> Copier';
+                }, 1800);
+                // Toast animé
+                toast.style.display = "block";
+                toast.classList.remove("hide");
+                setTimeout(() => {
+                    toast.classList.add("hide");
                     setTimeout(() => {
-                        copyButton.innerText = "📋 Copier la signature";
-                        confirmationMessage.style.display = "none";
-                    }, 2000);
-                }).catch((error) => {
-                    console.error(error);
-                    alert("❌ Erreur lors de la copie de la signature !");
-                });
+                        toast.style.display = "none";
+                        toast.classList.remove("hide");
+                    }, 400);
+                }, 1600);
+                // Copie dans l'image
+                hideTextInImage("http://localhost:8080/DEFAULT_SIGNATURE.png", "[CERTIDOCS]" + signatureId)
+                    .catch((error) => {
+                        toast.innerText = "❌ Erreur lors de la copie !";
+                        toast.style.background = "#ffeaea";
+                        toast.style.color = "#d32f2f";
+                        toast.style.display = "block";
+                        setTimeout(() => {
+                            toast.classList.add("hide");
+                            setTimeout(() => {
+                                toast.style.display = "none";
+                                toast.classList.remove("hide");
+                                toast.innerText = "✅ Signature copiée dans l'image !";
+                                toast.style.background = "#fff";
+                                toast.style.color = "#7a67e4";
+                            }, 400);
+                        }, 2000);
+                    });
             };
-            document.getElementById("status").appendChild(copyButton);
+
+            // Ajout de l'indication professionnelle en italique
+            const indication = document.createElement("div");
+            indication.style.fontStyle = "italic";
+            indication.style.color = "#6b7280";
+            indication.style.fontSize = "0.98em";
+            indication.style.marginTop = "18px";
+            indication.style.width = "100%";
+            indication.style.display = "block";
+            indication.style.textAlign = "center";
+            indication.innerText = "Veuillez copier et coller la signature dans votre mail.";
+            container.appendChild(indication);
+
+            status.appendChild(container);
         } catch (error) {
             console.error(error);
             document.getElementById("status").innerText = "❌ Erreur lors du stockage.";

@@ -1,0 +1,58 @@
+.loader-signature-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 90px;
+  min-width: 90px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 50%;
+  box-shadow: 0 4px 32px #9584ff33;
+  position: relative;
+}
+
+.loader-svg {
+  width: 70px;
+  height: 70px;
+  display: block;
+}
+
+.loader-ring {
+  stroke-dasharray: 150;
+  stroke-dashoffset: 0;
+  transform-origin: 50% 50%;
+  animation: loader-rotate 1.2s linear infinite;
+  filter: drop-shadow(0 0 8px #9584ff88);
+}
+
+@keyframes loader-rotate {
+  0% { transform: rotate(0deg);}
+  100% { transform: rotate(360deg);}
+}
+
+.loader-squiggle {
+  stroke-dasharray: 40;
+  stroke-dashoffset: 0;
+  animation: squiggle-move 1.2s ease-in-out infinite alternate;
+  filter: blur(0.5px);
+}
+
+@keyframes squiggle-move {
+  0% { stroke-dashoffset: 40;}
+  100% { stroke-dashoffset: 0;}
+}
+
+.loader-ring-fade {
+  opacity: 0.3;
+  filter: blur(1px);
+}
+
+.loader-check {
+  stroke-dasharray: 32;
+  stroke-dashoffset: 32;
+  animation: check-draw 0.7s cubic-bezier(.4,2,.3,1) forwards;
+  filter: drop-shadow(0 0 8px #7fffa7cc);
+}
+
+@keyframes check-draw {
+  to { stroke-dashoffset: 0;}
+} 

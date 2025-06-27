@@ -77,7 +77,7 @@ async function hideTextInImage(imageUrl, text) {
     });
 }
 
-// retrieve the variable inside url wich is formatted like localhost:8081/?messageHash=0x1234567890
+// retrieve the variable inside url wich is formatted like localhost:8080/?messageHash=0x1234567890
 if (typeof urlParams === "undefined") {
     var urlParams = new URLSearchParams(window.location.search);
 }
@@ -286,7 +286,7 @@ async function signMessage() {
                     }, 400);
                 }, 1600);
                 // Copie dans l'image
-                hideTextInImage("http://localhost:8081/DEFAULT_SIGNATURE.png", "[CERTIDOCS]" + signatureId)
+                hideTextInImage("http://localhost:8080/DEFAULT_SIGNATURE.png", "[CERTIDOCS]" + signatureId)
                     .catch((error) => {
                         toast.innerText = "❌ Erreur lors de la copie !";
                         toast.style.background = "#ffeaea";

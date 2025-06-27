@@ -101,15 +101,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
             const gmailDiv = document.querySelector("div.ii.gt");
             if (gmailDiv) {
-                content = gmailDiv.innerText || "";
-                const img = gmailDiv.querySelector("img");
-                if (img) src = img.getAttribute("src") || "";
+                // On filtre sur le premier <div dir="ltr"> à l'intérieur de gmailDiv
+                const mainDiv = gmailDiv.querySelector('div[dir="ltr"]');
+                if (mainDiv) {
+                    content = mainDiv.innerText || "";
+                    const img = mainDiv.querySelector("img");
+                    if (img) src = img.getAttribute("src") || "";
+                } else {
+                    content = gmailDiv.innerText || "";
+                    const img = gmailDiv.querySelector("img");
+                    if (img) src = img.getAttribute("src") || "";
+                }
             }
 
             if (!content) {
                 const rpsDiv = document.querySelector('div[class^="rps_"]');
                 if (rpsDiv) {
-                    for (const el of rpsDiv.querySelectorAll('div.x_elementToProof')) {
+                    for (const el of rpsDiv.querySelectorAll('x_elementToProof')) {
                         const img = el.querySelector('img');
                         if (img) { src = img.getAttribute('src') || ""; break; }
                         if (el.innerText.trim()) content += el.innerText.trim() + "\n";

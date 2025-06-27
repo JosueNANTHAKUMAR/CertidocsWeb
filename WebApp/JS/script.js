@@ -47,7 +47,7 @@ async function hideTextInImage(imageUrl, text) {
     });
 }
 
-// retrieve the variable inside url wich is formatted like localhost:8081/?messageHash=0x1234567890
+// retrieve the variable inside url wich is formatted like localhost:8080/?messageHash=0x1234567890
 const urlParams = new URLSearchParams(window.location.search);
 const messageHash = urlParams.get("messageHash");
 if (messageHash) {

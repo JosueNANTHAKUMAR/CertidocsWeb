@@ -8,6 +8,10 @@ import CustomText from "../component/CustomText";
 import CustomTextInput from "../component/CustomTextInput";
 import { useAppKitAccount, useDisconnect, modal } from "@reown/appkit/react";
 import { FaWallet, FaSignOutAlt, FaCog, FaRegCopy } from "react-icons/fa";
+import Tabs from "../component/Tabs";
+import "../component/Tabs.css";
+import PDFSection from "../component/PdfPage/PDFSection";
+import ImageSection from "../component/PdfPage/ImageSection";
 
 function VerifyPage() {
   const { isConnected, address } = useAppKitAccount();
@@ -16,12 +20,53 @@ function VerifyPage() {
   const [copyStatus, setCopyStatus] = useState("");
   const [signatureId, setSignatureId] = useState("");
   const [message, setMessage] = useState("");
+  const [activeTab, setActiveTab] = useState(0);
+  const [texte1, setTexte1] = useState("");
+  const [texte2, setTexte2] = useState("");
+  const [pdfFile, setPdfFile] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
+  const [mailContentLost, setMailContentLost] = useState(false);
+  const [originalMailContent, setOriginalMailContent] = useState({ signatureId: "", message: "" });
+  const [hasVisitedOtherTab, setHasVisitedOtherTab] = useState(false);
+  const [isReloading, setIsReloading] = useState(false);
 
   useEffect(() => {
     if (isConnected) {
       window.dispatchEvent(new Event('walletConnected'));
     }
   }, [isConnected]);
+
+  useEffect(() => {
+    if (signatureId && message && !originalMailContent.signatureId) {
+      setOriginalMailContent({ signatureId, message });
+    }
+  }, [signatureId, message, originalMailContent.signatureId]);
+
+  useEffect(() => {
+    console.log("Check mail content lost:", { activeTab, hasVisitedOtherTab, signatureId, message });
+    if (activeTab === 0 && hasVisitedOtherTab && (!signatureId || !message)) {
+      console.log("Mail content lost detected!");
+      setMailContentLost(true);
+    } else {
+      setMailContentLost(false);
+    }
+  }, [activeTab, signatureId, message, hasVisitedOtherTab]);
+
+  useEffect(() => {
+    if (activeTab !== 0) {
+      console.log("Visiting other tab, setting hasVisitedOtherTab to true");
+      setHasVisitedOtherTab(true);
+    }
+  }, [activeTab]);
+
+  const handleReloadMailContent = () => {
+    console.log("Rechargement de la page...");
+    console.log("Button clicked, reloading...");
+    setIsReloading(true);
+    setTimeout(() => {
+      document.location.reload();
+    }, 100);
+  };
 
   const handleOpenModal = () => {
     if (!modal) {
@@ -52,6 +97,159 @@ function VerifyPage() {
       }, 1200);
     }
   };
+
+  const tabs = [
+    {
+      label: "Mail",
+      content: (
+        <>
+          {console.log("Rendering mail tab, mailContentLost:", mailContentLost)}
+          {mailContentLost && (
+            <div style={{ marginBottom: 16, padding: 16, backgroundColor: '#f0eaff', borderRadius: 8, border: '2px solid #9584ff', boxShadow: '0 2px 8px rgba(149, 132, 255, 0.2)' }}>
+              <div style={{ color: '#9584ff', fontWeight: 500, marginBottom: 8 }}>
+                Contenu mail perdu
+              </div>
+              <button 
+                onClick={handleReloadMailContent}
+                style={{ backgroundColor: '#9584ff', color: 'white', border: 'none', padding: '12px 24px', fontSize: '16px', fontWeight: '600', borderRadius: '8px', cursor: 'pointer' }}
+              >
+                Recharger le contenu mail
+              </button>
+            </div>
+          )}
+          {!mailContentLost && (
+            <>
+              <CustomText className="" Text="Entrez l'ID de la signature :" />
+              <CustomTextInput
+                id="signatureId"
+                placeholder="0x..."
+                value={signatureId}
+                onChange={e => setSignatureId(e.target.value)}
+              />
+              <CustomText className="" Text="Entrez le message signé :" />
+              <CustomTextInput
+                id="messageInput"
+                rows={4}
+                placeholder="Écris le message ici..."
+                value={message}
+                onChange={e => setMessage(e.target.value)}
+              />
+              <ButtonCustom id="verifySignature" style={{ marginTop: 24, width: '100%' }}>
+                Vérifier la signature
+              </ButtonCustom>
+              <p id="verify"></p>
+            </>
+          )}
+        </>
+      ),
+    },
+    {
+      label: "Texte",
+      content: (
+        <div style={{ padding: 18 }}>
+          <CustomText className="" Text="Votre Signature ID :" />
+          <CustomTextInput
+            id="texte1"
+            placeholder="Entrez ici l'identifiant unique de votre signature..."
+            value={texte1}
+            onChange={e => setTexte1(e.target.value)}
+            style={{ marginBottom: 16 }}
+          />
+          <CustomText className="" Text="Message signé :" />
+          <CustomTextInput
+            id="texte2"
+            placeholder="Collez ici le message signé..."
+            value={texte2}
+            onChange={e => setTexte2(e.target.value)}
+          />
+          <ButtonCustom id="verifySignatureTexte" style={{ marginTop: 24, width: '100%' }}>
+            Vérifier la signature
+          </ButtonCustom>
+        </div>
+      ),
+    },
+    {
+      label: "PDF",
+      content: (
+        <div style={{ padding: 18 }}>
+          <PDFSection value={pdfFile} onChange={setPdfFile} />
+          <ButtonCustom id="verifySignaturePdf" style={{ marginTop: 24, width: '100%' }}>
+            Vérifier la signature PDF
+          </ButtonCustom>
+        </div>
+      ),
+    },
+    {
+      label: "Image",
+      content: (
+        <div style={{ padding: 18 }}>
+          <ImageSection value={imageFile} onChange={setImageFile} />
+          <ButtonCustom id="verifySignatureImage" style={{ marginTop: 24, width: '100%' }}>
+            Vérifier la signature Image
+          </ButtonCustom>
+        </div>
+      ),
+    },
+  ];
+
+  if (isReloading) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 9999,
+        backdropFilter: 'blur(10px)'
+      }}>
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.95)',
+          borderRadius: '20px',
+          padding: '40px',
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.2)',
+          textAlign: 'center',
+          maxWidth: '400px',
+          backdropFilter: 'blur(20px)'
+        }}>
+          <div style={{
+            width: '60px',
+            height: '60px',
+            border: '4px solid #f3f3f3',
+            borderTop: '4px solid #667eea',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 20px'
+          }}></div>
+          <div style={{
+            fontSize: '24px',
+            fontWeight: '600',
+            color: '#333',
+            marginBottom: '12px'
+          }}>
+            Rechargement en cours...
+          </div>
+          <div style={{
+            fontSize: '16px',
+            color: '#666',
+            lineHeight: '1.5'
+          }}>
+            Récupération du contenu mail
+          </div>
+          <style>{`
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          `}</style>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Container>
@@ -110,25 +308,7 @@ function VerifyPage() {
           )}
         </div>
       </div>
-      <CustomText className="" Text="Entrez l'ID de la signature :" />
-      <CustomTextInput
-        id="signatureId"
-        placeholder="0x..."
-        value={signatureId}
-        onChange={e => setSignatureId(e.target.value)}
-      />
-      <CustomText className="" Text="Entrez le message signé :" />
-      <CustomTextInput
-        id="messageInput"
-        rows={4}
-        placeholder="Écris le message ici..."
-        value={message}
-        onChange={e => setMessage(e.target.value)}
-      />
-      <ButtonCustom id="verifySignature" style={{ marginTop: 24, width: '100%' }}>
-        Vérifier la signature
-      </ButtonCustom>
-      <p id="verify"></p>
+      <Tabs activeTab={activeTab} onTabChange={setActiveTab} tabs={tabs} />
     </Container>
   );
 }

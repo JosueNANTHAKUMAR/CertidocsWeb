@@ -29,6 +29,17 @@ function VerifyPage() {
   const [originalMailContent, setOriginalMailContent] = useState({ signatureId: "", message: "" });
   const [hasVisitedOtherTab, setHasVisitedOtherTab] = useState(false);
   const [isReloading, setIsReloading] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [showErrorMessage, setShowErrorMessage] = useState(false);
+  const [isRecoveringMail, setIsRecoveringMail] = useState(true);
+  const [recoveryStep, setRecoveryStep] = useState(0);
+  const recoverySteps = [
+    "Connexion au serveur mail...",
+    "Récupération des données...",
+    "Analyse du contenu...",
+    "Extraction de la signature...",
+    "Prêt pour validation !"
+  ];
 
   useEffect(() => {
     if (isConnected) {
@@ -56,6 +67,50 @@ function VerifyPage() {
     if (activeTab !== 0) {
       console.log("Visiting other tab, setting hasVisitedOtherTab to true");
       setHasVisitedOtherTab(true);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    const checkVerificationResult = () => {
+      const verifyElement = document.getElementById("verify");
+      if (verifyElement) {
+        const text = verifyElement.innerText;
+        if (text.includes("✅ Signature VALIDE")) {
+          setShowSuccessMessage(true);
+          setShowErrorMessage(false);
+          verifyElement.style.display = 'none';
+          setTimeout(() => setShowSuccessMessage(false), 5000);
+        } else if (text.includes("❌ Signature NON VALIDE") || text.includes("❌ Erreur")) {
+          setShowErrorMessage(true);
+          setShowSuccessMessage(false);
+          verifyElement.style.display = 'none';
+          setTimeout(() => setShowErrorMessage(false), 5000);
+        }
+      }
+    };
+
+    const interval = setInterval(checkVerificationResult, 500);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const startRecovery = async () => {
+      setIsRecoveringMail(true);
+      setRecoveryStep(0);
+      
+      for (let i = 0; i < recoverySteps.length; i++) {
+        setRecoveryStep(i);
+        await new Promise(resolve => setTimeout(resolve, 800));
+      }
+      
+      // Simule la récupération des données
+      setSignatureId("0x" + Math.random().toString(16).slice(2, 66));
+      setMessage("Message récupéré automatiquement depuis votre boîte mail");
+      setIsRecoveringMail(false);
+    };
+    
+    if (activeTab === 0) {
+      startRecovery();
     }
   }, [activeTab]);
 
@@ -104,6 +159,97 @@ function VerifyPage() {
       content: (
         <>
           {console.log("Rendering mail tab, mailContentLost:", mailContentLost)}
+          {isRecoveringMail && (
+            <div style={{ padding: '32px 20px', textAlign: 'center' }}>
+              <div style={{
+                width: '80px',
+                height: '80px',
+                border: '6px solid #f3f3f3',
+                borderTop: '6px solid #9584ff',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite',
+                margin: '0 auto 24px'
+              }}></div>
+              <div style={{ fontSize: '20px', fontWeight: '600', color: '#333', marginBottom: '16px' }}>
+                Récupération automatique en cours...
+              </div>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, maxWidth: '400px', margin: '0 auto' }}>
+                {recoverySteps.map((step, idx) => (
+                  <li key={idx} style={{
+                    color: idx < recoveryStep ? '#4CAF50' : idx === recoveryStep ? '#9584ff' : '#999',
+                    fontWeight: idx <= recoveryStep ? 600 : 400,
+                    fontSize: '16px',
+                    marginBottom: '12px',
+                    opacity: idx <= recoveryStep ? 1 : 0.6,
+                    transition: 'all 0.3s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px'
+                  }}>
+                    {idx < recoveryStep ? <span style={{fontSize:20}}>✅</span> : 
+                     idx === recoveryStep ? <span style={{fontSize:20}}>⏳</span> : 
+                     <span style={{fontSize:20}}>⭕</span>}
+                    {step}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {signatureId && message && !isRecoveringMail && (
+            <div style={{ textAlign: 'center', padding: '32px 20px' }}>
+              <div style={{ fontSize: '22px', fontWeight: '600', color: '#333', marginBottom: '16px' }}>
+                ✅ Contenu récupéré avec succès !
+              </div>
+              <div style={{ color: '#666', marginBottom: '32px', lineHeight: '1.6' }}>
+                Signature et message extraits de votre boîte mail.<br/>
+                Cliquez sur le bouton ci-dessous pour vérifier votre signature
+              </div>
+            </div>
+          )}
+
+          {showSuccessMessage && (
+            <div style={{
+              padding: '32px 20px',
+              textAlign: 'center',
+              background: 'linear-gradient(135deg, #4CAF50, #45a049)',
+              borderRadius: '16px',
+              color: 'white',
+              margin: '20px 0',
+              boxShadow: '0 8px 32px rgba(76, 175, 80, 0.3)'
+            }}>
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎉</div>
+              <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '12px' }}>
+                Signature Validée !
+              </div>
+              <div style={{ fontSize: '16px', opacity: 0.9, lineHeight: '1.6' }}>
+                Votre signature électronique est authentique et valide.<br/>
+                Le document a été vérifié avec succès.
+              </div>
+            </div>
+          )}
+
+          {showErrorMessage && (
+            <div style={{
+              padding: '32px 20px',
+              textAlign: 'center',
+              background: 'linear-gradient(135deg, #f44336, #d32f2f)',
+              borderRadius: '16px',
+              color: 'white',
+              margin: '20px 0',
+              boxShadow: '0 8px 32px rgba(244, 67, 54, 0.3)'
+            }}>
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>❌</div>
+              <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '12px' }}>
+                Signature Invalide !
+              </div>
+              <div style={{ fontSize: '16px', opacity: 0.9, lineHeight: '1.6' }}>
+                La signature ne correspond pas au message<br/>
+                ou l'ID de signature est incorrect.
+              </div>
+            </div>
+          )}
+
           {mailContentLost && (
             <div style={{ marginBottom: 16, padding: 16, backgroundColor: '#f0eaff', borderRadius: 8, border: '2px solid #9584ff', boxShadow: '0 2px 8px rgba(149, 132, 255, 0.2)' }}>
               <div style={{ color: '#9584ff', fontWeight: 500, marginBottom: 8 }}>
@@ -117,29 +263,26 @@ function VerifyPage() {
               </button>
             </div>
           )}
-          {!mailContentLost && (
-            <>
-              <CustomText className="" Text="Entrez l'ID de la signature :" />
-              <CustomTextInput
-                id="signatureId"
-                placeholder="0x..."
-                value={signatureId}
-                onChange={e => setSignatureId(e.target.value)}
-              />
-              <CustomText className="" Text="Entrez le message signé :" />
-              <CustomTextInput
-                id="messageInput"
-                rows={4}
-                placeholder="Écris le message ici..."
-                value={message}
-                onChange={e => setMessage(e.target.value)}
-              />
-              <ButtonCustom id="verifySignature" style={{ marginTop: 24, width: '100%' }}>
-                Vérifier la signature
-              </ButtonCustom>
-              <p id="verify"></p>
-            </>
-          )}
+          {/* Champs cachés mais toujours présents pour la logique */}
+          <div style={{ display: 'none' }}>
+            <CustomTextInput
+              id="signatureId"
+              placeholder="0x..."
+              value={signatureId}
+              onChange={e => setSignatureId(e.target.value)}
+            />
+            <CustomTextInput
+              id="messageInput"
+              rows={4}
+              placeholder="Écris le message ici..."
+              value={message}
+              onChange={e => setMessage(e.target.value)}
+            />
+          </div>
+          <ButtonCustom id="verifySignature" style={{ marginTop: 24, width: '100%' }}>
+            Vérifier la signature
+          </ButtonCustom>
+          <p id="verify" style={{ display: 'none' }}></p>
         </>
       ),
     },

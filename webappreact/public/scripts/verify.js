@@ -31,58 +31,34 @@ if (signatureIdVar) {
     document.getElementById("signatureId").value = signatureIdVar.split("[CERTIDOCS]")[1];
 }
 
-async function connectMetaMask() {
-    if (typeof window.ethereum === "undefined") {
-        alert("❌ MetaMask non détecté !");
-        return;
-    }
-
+// Events walletConnected/walletDisconnected (gérés par React/appkit)
+window.addEventListener('walletConnected', async () => {
     const provider = new ethers.BrowserProvider(window.ethereum);
-
-    // Vérifie si MetaMask est déjà connecté
-    const accounts = await provider.send("eth_accounts", []);
-    if (accounts.length > 0) {
-        signer = await provider.getSigner();
-        const address = await signer.getAddress();
-        updateUI(address); // Met à jour l'interface avec l'adresse
-    } else {
-        alert("🔴 Aucun compte connecté à MetaMask !");
-    }
-
+    signer = await provider.getSigner();
+    const address = await signer.getAddress();
     contract = new ethers.Contract(contractAddress, abi, signer);
-    document.getElementById("signMessage").disabled = true;
-}
+    console.log(address)
+    updateUI(address);
+});
 
-function updateUI(address) {
-    let addressShort = address.substring(0, 6) + "..." + address.substring(address.length - 4);
-    const accountElement = document.getElementById("account");
-    accountElement.innerHTML = `
-        <div style="display: flex; align-items: center; font-size: 0.9em;">
-        </div>
-    `;
+window.addEventListener('walletDisconnected', () => {
+    signer = null;
+    contract = null;
+    updateUI(null);
+});
 
-    const addressSpan = createAddressSpan(address, addressShort);
-    accountElement.querySelector("div").appendChild(addressSpan);
-
-    const copyButton = createCopyButton(address);
-    accountElement.querySelector("div").appendChild(copyButton);
-}
-
+// Helpers UI (copié/adapté de script.js)
 function createAddressSpan(address, addressShort) {
     const addressSpan = document.createElement("span");
     addressSpan.innerText = "🟢 Connecté : " + addressShort;
     addressSpan.title = address;
     addressSpan.classList.add("address-span");
-    addressSpan.style.width = "310px";
-
     addressSpan.addEventListener("mouseover", () => {
         addressSpan.innerText = address;
     });
-
     addressSpan.addEventListener("mouseout", () => {
         addressSpan.innerText = "🟢 Connecté : " + addressShort;
     });
-
     return addressSpan;
 }
 
@@ -90,9 +66,6 @@ function createCopyButton(address) {
     const copyButton = document.createElement("button");
     copyButton.innerHTML = '<i class="fas fa-copy"></i>';
     copyButton.title = "Copier l'adresse";
-    copyButton.style.fontWeight = "bold";
-    copyButton.style.display = "flex";
-    copyButton.style.alignItems = "center";
     copyButton.addEventListener("click", () => {
         navigator.clipboard.writeText(address);
         copyButton.classList.add("icon-transition-out");
@@ -119,6 +92,20 @@ function createCopyButton(address) {
     return copyButton;
 }
 
+function updateUI(address) {
+    const accountElement = document.getElementById("account");
+    if (!accountElement) return;
+    accountElement.innerHTML = "";
+    if (address) {
+        let addressShort = address.substring(0, 6) + "..." + address.substring(address.length - 4);
+        const addressSpan = createAddressSpan(address, addressShort);
+        const copyButton = createCopyButton(address);
+        accountElement.appendChild(addressSpan);
+        accountElement.appendChild(copyButton);
+    }
+}
+
+// Vérification de la signature (exemple)
 async function verifySignature() {
     const signatureId = document.getElementById("signatureId").value.trim();
     if (!/^0x[a-fA-F0-9]{64}$/.test(signatureId)) {
@@ -153,27 +140,7 @@ async function verifySignature() {
     }
 }
 
-async function checkMetaMaskConnection() {
-    if (typeof window.ethereum === "undefined") {
-        document.getElementById("account").innerText = "❌ MetaMask non détecté !";
-        return;
-    }
-
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    const accounts = await provider.send("eth_accounts", []);
-
-    if (accounts.length > 0) {
-        signer = await provider.getSigner();
-        const address = await signer.getAddress();
-        contract = new ethers.Contract(contractAddress, abi, signer);
-        updateUI(address);
-    } else {
-        document.getElementById("account").innerText = "🔴 MetaMask non connecté !";
-    }
-}
-
-window.addEventListener("load", checkMetaMaskConnection);
+// Attache l'event click sur le bouton de vérification après chargement du DOM
 document
     .getElementById("verifySignature")
     .addEventListener("click", verifySignature);
-document.addEventListener("DOMContentLoaded", connectMetaMask);

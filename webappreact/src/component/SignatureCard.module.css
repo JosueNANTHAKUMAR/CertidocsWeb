@@ -2,18 +2,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 2.2em;
-  background: rgba(220,234,254,0.82);
-  border-radius: 1.3em;
-  box-shadow: 0 8px 32px #8A7FFF22, 0 0 0 2px #DCEAFE;
-  padding: 1.3em 1.7em 1.3em 1.7em;
-  margin: 1.5em 0 0.7em 0;
+  gap: 0.6em;
+  background: rgba(220,234,254,0.92);
+  border-radius: 0.7em;
+  box-shadow: 0 2px 8px #8A7FFF18, 0 0 0 1px #DCEAFE;
+  padding: 0.35em 0.7em 0.35em 0.7em;
+  margin: 0.3em 0 0.2em 0;
   min-width: 0;
   max-width: 100%;
   animation: fadeInCard 0.7s cubic-bezier(.4,2,.3,1);
-  backdrop-filter: blur(14px);
+  backdrop-filter: blur(6px);
   position: relative;
-  border: 1.5px solid #DCEAFE;
+  border: 1px solid #DCEAFE;
   transition: box-shadow 0.18s, background 0.18s, border 0.18s;
 }
 .card:hover, .card:focus-within {
@@ -44,15 +44,23 @@
 .value {
   font-family: 'Fira Mono', 'Menlo', monospace;
   color: #16D9E3;
-  font-size: 1.22em;
+  font-size: 0.98em;
   background: rgba(22,217,227,0.10);
-  border-radius: 8px;
-  padding: 0.13em 1.1em;
-  letter-spacing: 0.7px;
+  border-radius: 5px;
+  padding: 0.05em 0.5em;
+  letter-spacing: 0.3px;
   font-weight: 700;
   user-select: all;
   min-width: 0;
-  box-shadow: 0 1px 8px #16D9E311;
+  box-shadow: 0 1px 2px #16D9E311;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70px;
+  margin-right: 0.2em;
+  flex-shrink: 1;
+  flex-grow: 0;
+  text-align: left;
 }
 .copyBtn {
   background: linear-gradient(90deg, #8A7FFF 0%, #16D9E3 100%);
@@ -60,24 +68,27 @@
   border-radius: 999px;
   border: none;
   font-weight: 700;
-  font-size: 1.08em;
-  padding: 0.7em 1.7em;
+  font-size: 0.98em;
+  padding: 0.13em 0.13em;
   display: flex;
   align-items: center;
-  gap: 0.7em;
-  box-shadow: 0 2px 12px #8A7FFF33;
+  gap: 0.1em;
+  box-shadow: 0 1px 4px #8A7FFF18;
   cursor: pointer;
-  transition: transform 0.18s, box-shadow 0.18s, background 0.18s, border 0.18s;
+  transition: box-shadow 0.18s, background 0.18s, border 0.18s;
   position: relative;
   outline: none;
   min-width: 0;
-  border: 2px solid transparent;
+  border: 1px solid transparent;
   font-family: inherit;
+  height: 1.3em;
+  width: 1.3em;
+  justify-content: center;
 }
 .copyBtn:hover, .copyBtn:focus {
   background: linear-gradient(90deg, #16D9E3 0%, #8A7FFF 100%);
-  box-shadow: 0 8px 32px #16D9E355;
-  border: 2px solid #DCEAFE;
+  box-shadow: 0 2px 8px #16D9E355;
+  border: 1px solid #DCEAFE;
 }
 .copyBtn:active {
   transform: none;
@@ -90,16 +101,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25em;
-  margin-right: 0.18em;
+  font-size: 1em;
+  margin-right: 0;
   transition: transform 0.22s cubic-bezier(.4,2,.3,1);
 }
 .copyBtn:not(.copied):hover .btnIcon {
   transform: rotate(-8deg);
 }
 .clipboardSvg, .checkSvg {
-  width: 1.5em;
-  height: 1.5em;
+  width: 1em;
+  height: 1em;
   display: block;
 }
 .btnText {
@@ -120,6 +131,23 @@
 @keyframes fadeScaleIn {
   from { opacity: 0; transform: scale(0.7); }
   to { opacity: 1; transform: scale(1); }
+}
+.rowCompact {
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+  flex-wrap: nowrap;
+  width: 100%;
+  min-width: 0;
+  justify-content: flex-start;
+}
+.helpText {
+  font-size: 9px;
+  color: #888;
+  margin-left: 0.3em;
+  white-space: nowrap;
+  opacity: 0.8;
+  flex-shrink: 0;
 }
 @media (max-width: 700px) {
   .card {

@@ -305,18 +305,6 @@ async function signMessage() {
                     });
             };
 
-            // Ajout de l'indication professionnelle en italique
-            const indication = document.createElement("div");
-            indication.style.fontStyle = "italic";
-            indication.style.color = "#6b7280";
-            indication.style.fontSize = "0.98em";
-            indication.style.marginTop = "18px";
-            indication.style.width = "100%";
-            indication.style.display = "block";
-            indication.style.textAlign = "center";
-            indication.innerText = "Veuillez copier et coller la signature dans votre mail.";
-            container.appendChild(indication);
-
             status.appendChild(container);
         } catch (error) {
             console.error(error);

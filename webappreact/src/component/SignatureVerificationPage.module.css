@@ -246,7 +246,7 @@
   cursor: not-allowed;
 }
 .ctaBtn:hover:not(:disabled) {
-  transform: scale(1.04) translateY(-2px);
+  transform: translateY(-2px);
   box-shadow: 0 8px 32px #9584ff33;
 }
 .ctaAnim {

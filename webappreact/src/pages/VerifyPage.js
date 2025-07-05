@@ -387,7 +387,7 @@ function VerifyPage() {
                 <FaSignOutAlt /> Déconnecter
               </button>
               <button className="wallet-btn-2025" onClick={() => modal.open()}>
-                <FaCog /> Gérer mon wallet
+                <FaCog /> Mon wallet
               </button>
             </>
           ) : (

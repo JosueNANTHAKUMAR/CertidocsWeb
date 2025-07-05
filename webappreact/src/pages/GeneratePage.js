@@ -38,14 +38,6 @@ const GeneratePage = () => {
     if (isConnected) {
       window.dispatchEvent(new Event('walletConnected'));
       setActiveTab(0); // Active l'onglet Mail
-      setTimeout(() => {
-        const checklist = document.querySelector('.mail-section-loading');
-        if (checklist) {
-          checklist.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          checklist.classList.add('scroll-highlight-2025');
-          setTimeout(() => checklist.classList.remove('scroll-highlight-2025'), 1300);
-        }
-      }, 400); // Laisse le temps au rendu
     }
   }, [isConnected]);
 
@@ -165,24 +157,9 @@ const GeneratePage = () => {
 
   useEffect(() => {
     if (signed) {
-      setTimeout(() => {
-        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-      }, 300); // Laisse le temps à l'animation de check d'apparaître
+      // Animation terminée, pas de scroll
     }
   }, [signed]);
-
-  useEffect(() => {
-    const scrollToSignButton = () => {
-      const btn = document.getElementById('signMessage');
-      if (btn) {
-        btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        btn.classList.add('scroll-highlight-2025');
-        setTimeout(() => btn.classList.remove('scroll-highlight-2025'), 1300);
-      }
-    };
-    window.addEventListener('checklistDone', scrollToSignButton);
-    return () => window.removeEventListener('checklistDone', scrollToSignButton);
-  }, []);
 
   return (
     <div className="container">
@@ -232,7 +209,7 @@ const GeneratePage = () => {
                   <FaSignOutAlt /> Déconnecter
                 </button>
                 <button className="wallet-btn-2025" onClick={() => modal.open()}>
-                  <FaCog /> Gérer mon wallet
+                  <FaCog /> Mon wallet
                 </button>
               </>
             ) : (

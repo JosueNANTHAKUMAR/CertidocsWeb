@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaCheckCircle } from 'react-icons/fa';
 import './MailSection.css';
 
 const MailSection = ({ message, isConnected, active }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isDone, setIsDone] = useState(false);
-  const sectionRef = useRef(null);
 
   useEffect(() => {
     if (!isConnected || !active) return;
@@ -22,12 +21,6 @@ const MailSection = ({ message, isConnected, active }) => {
       return () => clearTimeout(timer);
     }
   }, [message, isConnected, active]);
-  
-  useEffect(() => {
-    if (active && sectionRef.current) {
-      sectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }, [active]);
 
   if (!isConnected) {
     return <div style={{ color: 'var(--text-muted)', textAlign: 'center', margin: '1.5em 0' }}>Connectez votre wallet pour pouvoir signer un message</div>;
@@ -37,66 +30,76 @@ const MailSection = ({ message, isConnected, active }) => {
   }
 
   return (
-    <div ref={sectionRef} className={`mail-section-loading ${isDone ? 'completed' : ''}`}>
+    <div className={`mail-section-loading ${isDone ? 'completed' : ''}`}>
       {isLoading && (
         <div style={{ 
           display: 'flex', 
-          flexDirection: 'column', 
+          flexDirection: 'row', 
           alignItems: 'center', 
-          padding: '32px 20px',
-          textAlign: 'center'
+          justifyContent: 'center',
+          padding: '6px 8px',
+          textAlign: 'left'
         }}>
           <div style={{
-            width: '60px',
-            height: '60px',
-            border: '3px solid #f3f3f3',
-            borderTop: '3px solid #9584ff',
+            width: '18px',
+            height: '18px',
+            border: '2px solid #f3f3f3',
+            borderTop: '2px solid #9584ff',
             borderRadius: '50%',
             animation: 'spin 1s linear infinite',
-            margin: '0 auto 20px'
+            marginRight: '8px',
+            flexShrink: 0
           }}></div>
-          <div style={{ 
-            fontSize: '18px', 
-            fontWeight: '600', 
-            color: '#333', 
-            marginBottom: '12px' 
-          }}>
-            Récupération en cours...
-          </div>
-          <div style={{ 
-            fontSize: '14px', 
-            color: '#666',
-            lineHeight: '1.4'
-          }}>
-            Analyse du contenu mail
+          <div>
+            <div style={{ 
+              fontSize: '15px', 
+              fontWeight: '600', 
+              color: '#333', 
+              marginBottom: '2px' 
+            }}>
+              Récupération en cours...
+            </div>
+            <div style={{ 
+              fontSize: '12px', 
+              color: '#666',
+              lineHeight: '1.2'
+            }}>
+              Analyse du contenu mail
+            </div>
           </div>
         </div>
       )}
 
       {isDone && (
         <div style={{ 
-          textAlign: 'center', 
-          padding: '32px 20px' 
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '6px 8px'
         }}>
           <FaCheckCircle style={{ 
-            fontSize: '48px', 
-            marginBottom: '16px',
-            color: '#4CAF50'
+            fontSize: '18px', 
+            marginRight: '8px',
+            color: '#4CAF50',
+            flexShrink: 0
           }} />
-          <div style={{ 
-            fontSize: '20px', 
-            fontWeight: '600', 
-            color: '#333', 
-            marginBottom: '12px' 
-          }}>
-            Contenu récupéré !
-          </div>
-          <div style={{ 
-            color: '#666', 
-            fontSize: '14px',
-            lineHeight: '1.4' 
-          }}>
-            Votre message est prêt à être signé
+          <div>
+            <div style={{ 
+              fontSize: '15px', 
+              fontWeight: '600', 
+              color: '#333', 
+              marginBottom: '2px' 
+            }}>
+              Contenu récupéré !
+            </div>
+            <div style={{ 
+              color: '#666', 
+              fontSize: '12px',
+              lineHeight: '1.2' 
+            }}>
+              Votre message est prêt à être signé
+            </div>
           </div>
         </div>
       )}

@@ -74,7 +74,6 @@ button:disabled {
   cursor: not-allowed;
 }
 button:hover, .button:hover {
-  transform: translateY(-2px) scale(1.03);
   box-shadow: 0 3px 12px #9584ff33;
 }
 
@@ -235,7 +234,6 @@ input, textarea, select, button {
   gap: 0.5em;
 }
 .button-3d:hover {
-  transform: scale(1.05) translateY(-2px);
   box-shadow: 0 6px 24px #9584ff55;
 }
 .button-3d:active {
@@ -360,7 +358,6 @@ input, textarea, select, button {
   cursor: pointer;
 }
 .wallet-btn-2025:hover {
-  transform: scale(1.05) translateY(-2px);
   box-shadow: 0 6px 24px #9584ff55;
 }
 @media (max-width: 500px) {
@@ -435,9 +432,9 @@ input, textarea, select, button {
   animation: pulseCopy 0.35s;
 }
 @keyframes pulseCopy {
-  0% { transform: scale(1);}
-  40% { transform: scale(1.12);}
-  100% { transform: scale(1);}
+  0% { transform: none;}
+  40% { transform: none;}
+  100% { transform: none;}
 }
 .signature-copied-tooltip-2025 {
   position: absolute;
@@ -492,7 +489,7 @@ input, textarea, select, button {
   transition: transform 0.18s;
 }
 .signature-copy-btn-2025:hover .signature-clipboard-anim-2025 {
-  transform: scale(1.15) rotate(-8deg);
+  transform: rotate(-8deg);
 }
 .signature-check-anim-2025 {
   display: inline-block;
@@ -544,7 +541,6 @@ input, textarea, select, button {
 }
 .signature-copy-btn-2025:hover {
   background: linear-gradient(90deg, #b8aaff 0%, #9584ff 100%);
-  transform: scale(1.04);
   box-shadow: 0 6px 24px #9584ff55;
 }
 .signature-copy-btn-2025.copied {

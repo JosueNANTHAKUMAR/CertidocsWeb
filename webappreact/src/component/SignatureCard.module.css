@@ -76,12 +76,11 @@
 }
 .copyBtn:hover, .copyBtn:focus {
   background: linear-gradient(90deg, #16D9E3 0%, #8A7FFF 100%);
-  transform: scale(1.045);
   box-shadow: 0 8px 32px #16D9E355;
   border: 2px solid #DCEAFE;
 }
 .copyBtn:active {
-  transform: scale(0.98);
+  transform: none;
 }
 .copied {
   background: linear-gradient(90deg, #16D9E3 0%, #8A7FFF 100%);
@@ -96,7 +95,7 @@
   transition: transform 0.22s cubic-bezier(.4,2,.3,1);
 }
 .copyBtn:not(.copied):hover .btnIcon {
-  transform: scale(1.18) rotate(-8deg);
+  transform: rotate(-8deg);
 }
 .clipboardSvg, .checkSvg {
   width: 1.5em;

@@ -8,8 +8,8 @@ chrome.runtime.onMessage.addListener((request) => {
         chrome.windows.get(windowId, (window) => {
             // const left = window.left;
             // const top = window.top;
-            const windowWidth = 500;
-            const windowHeight = 575;
+            const windowWidth = 400;
+            const windowHeight = 780;
             const screenWidth = window.width;
             const screenHeight = window.height;
 

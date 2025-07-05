@@ -7,11 +7,12 @@ import Container from "../component/Container";
 import CustomText from "../component/CustomText";
 import CustomTextInput from "../component/CustomTextInput";
 import { useAppKitAccount, useDisconnect, modal } from "@reown/appkit/react";
-import { FaWallet, FaSignOutAlt, FaCog, FaRegCopy } from "react-icons/fa";
+import { FaWallet, FaSignOutAlt, FaCog, FaRegCopy, FaInbox, FaEdit, FaFileAlt, FaCamera } from "react-icons/fa";
 import Tabs from "../component/Tabs";
 import "../component/Tabs.css";
 import PDFSection from "../component/PdfPage/PDFSection";
 import ImageSection from "../component/PdfPage/ImageSection";
+import VerificationAnimation from "../component/VerificationAnimation";
 
 function VerifyPage() {
   const { isConnected, address } = useAppKitAccount();
@@ -29,17 +30,9 @@ function VerifyPage() {
   const [originalMailContent, setOriginalMailContent] = useState({ signatureId: "", message: "" });
   const [hasVisitedOtherTab, setHasVisitedOtherTab] = useState(false);
   const [isReloading, setIsReloading] = useState(false);
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-  const [showErrorMessage, setShowErrorMessage] = useState(false);
-  const [isRecoveringMail, setIsRecoveringMail] = useState(true);
-  const [recoveryStep, setRecoveryStep] = useState(0);
-  const recoverySteps = [
-    "Connexion au serveur mail...",
-    "Récupération des données...",
-    "Analyse du contenu...",
-    "Extraction de la signature...",
-    "Prêt pour validation !"
-  ];
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationResult, setVerificationResult] = useState(null);
+  const [showContentRecovered, setShowContentRecovered] = useState(true);
 
   useEffect(() => {
     if (isConnected) {
@@ -76,15 +69,13 @@ function VerifyPage() {
       if (verifyElement) {
         const text = verifyElement.innerText;
         if (text.includes("✅ Signature VALIDE")) {
-          setShowSuccessMessage(true);
-          setShowErrorMessage(false);
+          setVerificationResult('success');
+          setIsVerifying(false);
           verifyElement.style.display = 'none';
-          setTimeout(() => setShowSuccessMessage(false), 5000);
         } else if (text.includes("❌ Signature NON VALIDE") || text.includes("❌ Erreur")) {
-          setShowErrorMessage(true);
-          setShowSuccessMessage(false);
+          setVerificationResult('error');
+          setIsVerifying(false);
           verifyElement.style.display = 'none';
-          setTimeout(() => setShowErrorMessage(false), 5000);
         }
       }
     };
@@ -93,26 +84,14 @@ function VerifyPage() {
     return () => clearInterval(interval);
   }, []);
 
+  // Initialisation directe des données mail
   useEffect(() => {
-    const startRecovery = async () => {
-      setIsRecoveringMail(true);
-      setRecoveryStep(0);
-      
-      for (let i = 0; i < recoverySteps.length; i++) {
-        setRecoveryStep(i);
-        await new Promise(resolve => setTimeout(resolve, 800));
-      }
-      
-      // Simule la récupération des données
+    if (activeTab === 0 && !signatureId && !message) {
+      // Récupération directe des données sans animation
       setSignatureId("0x" + Math.random().toString(16).slice(2, 66));
       setMessage("Message récupéré automatiquement depuis votre boîte mail");
-      setIsRecoveringMail(false);
-    };
-    
-    if (activeTab === 0) {
-      startRecovery();
     }
-  }, [activeTab]);
+  }, [activeTab, signatureId, message]);
 
   const handleReloadMailContent = () => {
     console.log("Rechargement de la page...");
@@ -153,50 +132,31 @@ function VerifyPage() {
     }
   };
 
+  const handleVerificationComplete = () => {
+    setVerificationResult(null);
+    setIsVerifying(false);
+    // Ne pas remettre showContentRecovered à true pour éviter que le message réapparaisse
+  };
+
+  const handleVerifyClick = () => {
+    setShowContentRecovered(false);
+    setIsVerifying(true);
+    setVerificationResult(null);
+  };
+
   const tabs = [
     {
-      label: "Mail",
+      label: (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <FaInbox style={{ fontSize: '16px' }} />
+          <span>Mail</span>
+        </div>
+      ),
       content: (
         <>
           {console.log("Rendering mail tab, mailContentLost:", mailContentLost)}
-          {isRecoveringMail && (
-            <div style={{ padding: '32px 20px', textAlign: 'center' }}>
-              <div style={{
-                width: '80px',
-                height: '80px',
-                border: '6px solid #f3f3f3',
-                borderTop: '6px solid #9584ff',
-                borderRadius: '50%',
-                animation: 'spin 1s linear infinite',
-                margin: '0 auto 24px'
-              }}></div>
-              <div style={{ fontSize: '20px', fontWeight: '600', color: '#333', marginBottom: '16px' }}>
-                Récupération automatique en cours...
-              </div>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, maxWidth: '400px', margin: '0 auto' }}>
-                {recoverySteps.map((step, idx) => (
-                  <li key={idx} style={{
-                    color: idx < recoveryStep ? '#4CAF50' : idx === recoveryStep ? '#9584ff' : '#999',
-                    fontWeight: idx <= recoveryStep ? 600 : 400,
-                    fontSize: '16px',
-                    marginBottom: '12px',
-                    opacity: idx <= recoveryStep ? 1 : 0.6,
-                    transition: 'all 0.3s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px'
-                  }}>
-                    {idx < recoveryStep ? <span style={{fontSize:20}}>✅</span> : 
-                     idx === recoveryStep ? <span style={{fontSize:20}}>⏳</span> : 
-                     <span style={{fontSize:20}}>⭕</span>}
-                    {step}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
 
-          {signatureId && message && !isRecoveringMail && (
+          {signatureId && message && showContentRecovered && !isVerifying && !verificationResult && (
             <div style={{ textAlign: 'center', padding: '32px 20px' }}>
               <div style={{ fontSize: '22px', fontWeight: '600', color: '#333', marginBottom: '16px' }}>
                 ✅ Contenu récupéré avec succès !
@@ -208,46 +168,12 @@ function VerifyPage() {
             </div>
           )}
 
-          {showSuccessMessage && (
-            <div style={{
-              padding: '32px 20px',
-              textAlign: 'center',
-              background: 'linear-gradient(135deg, #4CAF50, #45a049)',
-              borderRadius: '16px',
-              color: 'white',
-              margin: '20px 0',
-              boxShadow: '0 8px 32px rgba(76, 175, 80, 0.3)'
-            }}>
-              <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎉</div>
-              <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '12px' }}>
-                Signature Validée !
-              </div>
-              <div style={{ fontSize: '16px', opacity: 0.9, lineHeight: '1.6' }}>
-                Votre signature électronique est authentique et valide.<br/>
-                Le document a été vérifié avec succès.
-              </div>
-            </div>
-          )}
-
-          {showErrorMessage && (
-            <div style={{
-              padding: '32px 20px',
-              textAlign: 'center',
-              background: 'linear-gradient(135deg, #f44336, #d32f2f)',
-              borderRadius: '16px',
-              color: 'white',
-              margin: '20px 0',
-              boxShadow: '0 8px 32px rgba(244, 67, 54, 0.3)'
-            }}>
-              <div style={{ fontSize: '48px', marginBottom: '16px' }}>❌</div>
-              <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '12px' }}>
-                Signature Invalide !
-              </div>
-              <div style={{ fontSize: '16px', opacity: 0.9, lineHeight: '1.6' }}>
-                La signature ne correspond pas au message<br/>
-                ou l'ID de signature est incorrect.
-              </div>
-            </div>
+          {(isVerifying || verificationResult) && (
+            <VerificationAnimation 
+              isVerifying={isVerifying}
+              result={verificationResult}
+              onComplete={handleVerificationComplete}
+            />
           )}
 
           {mailContentLost && (
@@ -279,7 +205,12 @@ function VerifyPage() {
               onChange={e => setMessage(e.target.value)}
             />
           </div>
-          <ButtonCustom id="verifySignature" style={{ marginTop: 24, width: '100%' }}>
+          <ButtonCustom 
+            id="verifySignature" 
+            style={{ marginTop: 24, width: '100%' }}
+            onClick={handleVerifyClick}
+            disabled={isVerifying}
+          >
             Vérifier la signature
           </ButtonCustom>
           <p id="verify" style={{ display: 'none' }}></p>
@@ -287,7 +218,12 @@ function VerifyPage() {
       ),
     },
     {
-      label: "Texte",
+      label: (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <FaEdit style={{ fontSize: '16px' }} />
+          <span>Texte</span>
+        </div>
+      ),
       content: (
         <div style={{ padding: 18 }}>
           <CustomText className="" Text="Votre Signature ID :" />
@@ -312,7 +248,12 @@ function VerifyPage() {
       ),
     },
     {
-      label: "PDF",
+      label: (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <FaFileAlt style={{ fontSize: '16px' }} />
+          <span>PDF</span>
+        </div>
+      ),
       content: (
         <div style={{ padding: 18 }}>
           <PDFSection value={pdfFile} onChange={setPdfFile} />
@@ -323,7 +264,12 @@ function VerifyPage() {
       ),
     },
     {
-      label: "Image",
+      label: (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <FaCamera style={{ fontSize: '16px' }} />
+          <span>Image</span>
+        </div>
+      ),
       content: (
         <div style={{ padding: 18 }}>
           <ImageSection value={imageFile} onChange={setImageFile} />
@@ -441,7 +387,7 @@ function VerifyPage() {
                 <FaSignOutAlt /> Déconnecter
               </button>
               <button className="wallet-btn-2025" onClick={() => modal.open()}>
-                <FaCog /> Gérer mon wallet
+                <FaCog /> Mon wallet
               </button>
             </>
           ) : (

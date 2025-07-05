@@ -105,8 +105,123 @@ function updateUI(address) {
     }
 }
 
+// Fonction pour créer une belle alerte
+function showBeautifulAlert(message, type = 'error') {
+    // Supprimer les alertes existantes
+    const existingAlerts = document.querySelectorAll('.beautiful-alert');
+    existingAlerts.forEach(alert => alert.remove());
+
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `beautiful-alert ${type}`;
+    alertDiv.innerHTML = `
+        <div class="alert-content">
+            <div class="alert-icon">
+                ${type === 'error' ? '❌' : type === 'success' ? '✅' : '⚠️'}
+            </div>
+            <div class="alert-message">${message}</div>
+            <button class="alert-close" onclick="this.parentElement.parentElement.remove()">×</button>
+        </div>
+    `;
+
+    // Styles pour l'alerte
+    const style = document.createElement('style');
+    style.textContent = `
+        .beautiful-alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            animation: slideInRight 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .beautiful-alert.error {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+        }
+        
+        .beautiful-alert.success {
+            background: linear-gradient(135deg, #51cf66, #40c057);
+        }
+        
+        .beautiful-alert.warning {
+            background: linear-gradient(135deg, #ffd43b, #fcc419);
+        }
+        
+        .alert-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            color: white;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-width: 300px;
+        }
+        
+        .alert-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        
+        .alert-message {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+        
+        .alert-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+        
+        .alert-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    `;
+    
+    document.head.appendChild(style);
+    document.body.appendChild(alertDiv);
+
+    // Auto-suppression après 5 secondes
+    setTimeout(() => {
+        if (alertDiv.parentElement) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+
 // Vérification de la signature (exemple)
 async function verifySignature() {
+    // Vérifier si l'utilisateur est connecté
+    if (!signer) {
+        showBeautifulAlert('🔐 Veuillez d\'abord connecter votre wallet pour vérifier une signature', 'error');
+        return;
+    }
+
     const signatureId = document.getElementById("signatureId").value.trim();
     if (!/^0x[a-fA-F0-9]{64}$/.test(signatureId)) {
         alert("❌ L'ID de signature est invalide !");
@@ -118,6 +233,7 @@ async function verifySignature() {
         alert("❌ Le message ne peut pas être vide !");
         return;
     }
+    
     messageHash = message;
     const userAddress = await signer.getAddress();
     console.log("Hash du message :", messageHash);
@@ -133,7 +249,10 @@ async function verifySignature() {
         : "❌ Signature NON VALIDE.";
         console.log(isValid);
     } catch (error) {
-        alert(error.message);
+        // Ne pas afficher d'alerte pour l'erreur de décodage
+        if (!error.message.includes("could not decode result data")) {
+            alert(error.message);
+        }
         console.error(error);
         document.getElementById("verify").innerText =
         "❌ Erreur lors de la vérification.";

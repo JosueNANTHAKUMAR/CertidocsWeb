@@ -1,0 +1,264 @@
+.verify-button {
+  position: relative;
+  width: 100%;
+  height: 56px;
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+  margin-top: 24px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.verify-button:not(.disabled):not(.verifying):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(102, 126, 234, 0.4);
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+}
+
+.verify-button:not(.disabled):not(.verifying):active {
+  transform: translateY(0);
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+}
+
+/* État de vérification */
+.verify-button.verifying {
+  background: linear-gradient(135deg, #ffd93d 0%, #ff6b6b 100%);
+  cursor: not-allowed;
+  animation: verifying-pulse 2s ease-in-out infinite;
+}
+
+.verify-button.verifying .button-icon {
+  color: #fff;
+}
+
+/* État de succès */
+.verify-button.success {
+  background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
+  box-shadow: 0 8px 32px rgba(81, 207, 102, 0.3);
+  animation: success-bounce 0.6s ease-out;
+}
+
+.verify-button.success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(81, 207, 102, 0.4);
+}
+
+/* État d'erreur */
+.verify-button.error {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+  box-shadow: 0 8px 32px rgba(255, 107, 107, 0.3);
+  animation: error-shake 0.6s ease-out;
+}
+
+.verify-button.error:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(255, 107, 107, 0.4);
+}
+
+/* État désactivé */
+.verify-button.disabled {
+  background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+  color: #6c757d;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.verify-button.disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Contenu du bouton */
+.button-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 100%;
+  position: relative;
+  z-index: 2;
+}
+
+.button-icon {
+  font-size: 18px;
+  transition: all 0.3s ease;
+}
+
+.button-icon.spinning {
+  animation: spin 1s linear infinite;
+}
+
+.button-icon.success {
+  color: #fff;
+  animation: success-icon 0.6s ease-out;
+}
+
+.button-icon.error {
+  color: #fff;
+  animation: error-icon 0.6s ease-out;
+}
+
+/* Effet ripple */
+.ripple-effect {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(0);
+  animation: ripple 0.6s linear;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Effet de brillance */
+.button-shine {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left 0.5s;
+  z-index: 1;
+}
+
+.verify-button:hover .button-shine {
+  left: 100%;
+}
+
+/* Effet de lueur */
+.button-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 16px;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+}
+
+.verify-button:hover .button-glow {
+  opacity: 1;
+}
+
+/* Animations */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+@keyframes verifying-pulse {
+  0%, 100% {
+    box-shadow: 0 8px 32px rgba(255, 217, 61, 0.3);
+  }
+  50% {
+    box-shadow: 0 8px 32px rgba(255, 217, 61, 0.6);
+  }
+}
+
+@keyframes success-bounce {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes error-shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+@keyframes success-icon {
+  0% {
+    transform: scale(0) rotate(-180deg);
+  }
+  50% {
+    transform: scale(1.2) rotate(0deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes error-icon {
+  0% {
+    transform: scale(0) rotate(180deg);
+  }
+  50% {
+    transform: scale(1.2) rotate(0deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .verify-button {
+    height: 52px;
+    font-size: 15px;
+    border-radius: 14px;
+  }
+  
+  .button-icon {
+    font-size: 16px;
+  }
+  
+  .button-content {
+    gap: 10px;
+  }
+}
+
+/* Support pour les préférences de réduction de mouvement */
+@media (prefers-reduced-motion: reduce) {
+  .verify-button,
+  .button-icon,
+  .ripple-effect,
+  .button-shine,
+  .button-glow {
+    animation: none;
+    transition: none;
+  }
+  
+  .verify-button:hover {
+    transform: none;
+  }
+} 

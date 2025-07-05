@@ -30,8 +30,6 @@ function VerifyPage() {
   const [originalMailContent, setOriginalMailContent] = useState({ signatureId: "", message: "" });
   const [hasVisitedOtherTab, setHasVisitedOtherTab] = useState(false);
   const [isReloading, setIsReloading] = useState(false);
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-  const [showErrorMessage, setShowErrorMessage] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationResult, setVerificationResult] = useState(null);
   const [showContentRecovered, setShowContentRecovered] = useState(true);

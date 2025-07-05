@@ -32,7 +32,7 @@ const VerificationAnimation = ({ isVerifying, result, onComplete }) => {
 
       return () => clearInterval(interval);
     }
-  }, [isVerifying]);
+  }, [isVerifying, verificationSteps.length]);
 
   useEffect(() => {
     if (result && onComplete) {

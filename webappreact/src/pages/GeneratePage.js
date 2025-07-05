@@ -13,9 +13,8 @@ import MailSection from '../component/MailSection';
 import TexteSection from '../component/TexteSection';
 import Tabs from '../component/Tabs';
 import '../component/Tabs.css';
-import { FaWallet, FaSignOutAlt, FaCog, FaRegCopy, FaEye, FaEnvelope, FaFont, FaFilePdf, FaImage } from "react-icons/fa";
+import { FaWallet, FaSignOutAlt, FaCog, FaRegCopy, FaEye, FaInbox, FaEdit, FaFileAlt, FaCamera } from "react-icons/fa";
 import confetti from "canvas-confetti";
-import LoaderSignature from '../component/LoaderSignature';
 import PDFSection from '../component/PdfPage/PDFSection';
 import ImageSection from '../component/PdfPage/ImageSection';
 import SignatureCard from '../component/SignatureCard';
@@ -30,18 +29,10 @@ const GeneratePage = () => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [copyStatus, setCopyStatus] = useState("");
   const [showPreview, setShowPreview] = useState(false);
-  const [signing, setSigning] = useState(false);
   const [signed, setSigned] = useState(false);
   const [signature, setSignature] = useState("");
-  const [checklistStep, setChecklistStep] = useState(0);
   const [pdfFile, setPdfFile] = useState(null);
   const [imageFile, setImageFile] = useState(null);
-  const checklist = [
-    "Préparation du message...",
-    "Génération de la signature...",
-    "Envoi à la blockchain...",
-    "Confirmation..."
-  ];
 
   useEffect(() => {
     if (isConnected) {
@@ -82,7 +73,7 @@ const GeneratePage = () => {
 
   const handleDisconnect = async () => {
     try {
-      await disconnect();      
+      await disconnect();
       localStorage.clear();
       console.log("Déconnecté et cache vidé.");
       // On notifie aussi script.js (pour reset UI côté vanilla)
@@ -125,37 +116,49 @@ const GeneratePage = () => {
   }
 
   const handleSign = async () => {
-    setSigning(true);
     setSigned(false);
     setSignature("");
-    setChecklistStep(0);
-    // Animation checklist
-    for (let i = 0; i < checklist.length; i++) {
-      setChecklistStep(i);
-      await new Promise(res => setTimeout(res, 900));
-    }
-    // Simule la génération d'une signature
+    // Génération directe de la signature sans animation
     setSignature("0x" + Math.random().toString(16).slice(2, 66));
-    setSigning(false);
     setSigned(true);
     launchConfetti();
   };
 
   const tabs = [
     {
-      label: <><span className="tab-icon"><FaEnvelope /></span>Mail</>,
+      label: (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <FaInbox style={{ fontSize: '16px' }} />
+          <span>Mail</span>
+        </div>
+      ),
       content: <MailSection message={mailMessage} isConnected={isConnected} active={activeTab === 0} />,
     },
     {
-      label: <><span className="tab-icon"><FaFont /></span>Texte</>,
+      label: (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <FaEdit style={{ fontSize: '16px' }} />
+          <span>Texte</span>
+        </div>
+      ),
       content: <TexteSection value={texteValue} onChange={e => setTexteValue(e.target.value)} />,
     },
     {
-      label: <><span className="tab-icon"><FaFilePdf /></span>PDF</>,
+      label: (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <FaFileAlt style={{ fontSize: '16px' }} />
+          <span>PDF</span>
+        </div>
+      ),
       content: <PDFSection value={pdfFile} onChange={setPdfFile} />,
     },
     {
-      label: <><span className="tab-icon"><FaImage /></span>Image</>,
+      label: (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <FaCamera style={{ fontSize: '16px' }} />
+          <span>Image</span>
+        </div>
+      ),
       content: <ImageSection value={imageFile} onChange={setImageFile} />,
     },
   ];
@@ -325,34 +328,12 @@ const GeneratePage = () => {
       <button
         id="signMessage"
         className="button-3d"
-        disabled={signing || !texteValue || !isConnected}
-        style={{ width: '100%', marginTop: 8, marginBottom: 4, fontSize: 16, display: signing ? 'none' : 'block' }}
+        disabled={!texteValue || !isConnected}
+        style={{ width: '100%', marginTop: 8, marginBottom: 4, fontSize: 16, display: 'block' }}
         onClick={handleSign}
       >
         🖊️ Signer et stocker sur la blockchain
       </button>
-      {/* Loader + checklist UX 2025 */}
-      {signing && (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18, margin: '1.2em 0' }}>
-          <LoaderSignature loading={signing} success={signed} />
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, minWidth: 220 }}>
-            {checklist.map((step, idx) => (
-              <li key={idx} style={{
-                color: idx < checklistStep ? '#7fffa7' : idx === checklistStep ? 'var(--accent)' : 'var(--text-muted)',
-                fontWeight: idx <= checklistStep ? 600 : 400,
-                fontSize: '1.05em',
-                marginBottom: 6,
-                opacity: idx <= checklistStep ? 1 : 0.6,
-                transition: 'color 0.3s, opacity 0.3s',
-                display: 'flex', alignItems: 'center', gap: 8
-              }}>
-                {idx < checklistStep ? <span style={{fontSize:18}}>✔️</span> : idx === checklistStep ? <span style={{fontSize:18}}>⏳</span> : <span style={{fontSize:18}}>•</span>}
-                {step}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
       {/* Résultat signature */}
       {signed && signature && (
         <SignatureCard signature={signature} onCopy={launchConfetti} />

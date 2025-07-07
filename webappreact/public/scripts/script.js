@@ -7,13 +7,17 @@ if (typeof contract === "undefined") {
     var contract = null;
 }
 if (typeof contractAddress === "undefined") {
-    var contractAddress = "0x7b63B543Ee68aa8C9faaAB12Ba73827F6973378f";
+    var contractAddress = "0x6515cc2007BF39BF74bc561d054D228325223A2A";
 }
 if (typeof abi === "undefined") {
     var abi = [
-        "function storeSignature(bytes32, uint256, address[], bytes) external",
+        "function storeSignature(bytes32, uint256, address[], bytes, uint256) external",
     ];
 }
+
+let currentTab = 0; // 0 = mail, 1 = Texte, 2 = PDF, 3 = Image
+let currentPDFFile = null;
+let currentImageFile = null;
 
 window.addEventListener('walletConnected', async () => {
     const provider = new ethers.BrowserProvider(window.ethereum);
@@ -33,6 +37,45 @@ window.addEventListener('walletDisconnected', () => {
     updateUI(null);
     document.getElementById("signMessage").disabled = true;
 });
+
+async function hideTextInImageReturnBlob(imageUrl, text) {
+    const img = new Image();
+    img.crossOrigin = "anonymous"; // Évite les problèmes de CORS
+    img.src = imageUrl;
+    return new Promise((resolve, reject) => {
+        img.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            // Convertir le texte en binaire
+            const binaryText = text.split('').map(char => {
+                return char.charCodeAt(0).toString(2).padStart(8, '0');
+            }).join('') + '00000000'; // Ajouter un marqueur de fin
+            // Cacher les données dans les pixels
+            for (let i = 0; i < binaryText.length; i++) {
+                if (i * 4 < data.length) {
+                    data[i * 4] = (data[i * 4] & 0xFE) | parseInt(binaryText[i], 2);
+                } else {
+                    break;
+                }
+            }
+            ctx.putImageData(imageData, 0, 0);
+            // Copier l'image modifiée dans un blob
+            canvas.toBlob(blob => {
+                if (blob) {
+                    resolve(blob);
+                } else {
+                    reject("Erreur lors de la création du blob");
+                }
+            }, "image/png");
+        };
+        img.onerror = () => reject("Erreur de chargement de l'image");
+    });
+}
 
 async function hideTextInImage(imageUrl, text) {
     const img = new Image();
@@ -77,7 +120,7 @@ async function hideTextInImage(imageUrl, text) {
     });
 }
 
-// retrieve the variable inside url wich is formatted like localhost:8080/?messageHash=0x1234567890
+// retrieve the variable inside url wich is formatted like localhost3000/?messageHash=0x1234567890
 if (typeof urlParams === "undefined") {
     var urlParams = new URLSearchParams(window.location.search);
 }
@@ -165,37 +208,122 @@ function updateUI(address) {
     }
 }
 
+function readFileAsArrayBuffer(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+    });
+}
+
+
 async function signMessage() {
-    const message = document.getElementById("messageInput").value.trim();
-    if (message === "") {
-        alert("❌ Le message ne peut pas être vide !");
+    let messageHash;
+    let message;
+    let signature;
+    let authorizedRecipients = [];
+    let isString = false;
+    isString = document.getElementById("signatureCheckbox").checked;
+    if (currentTab === 0 || currentTab === 1) {
+        message = document.getElementById("messageInput").value.trim();
+        if (message === "") {
+            alert("❌ Le message ne peut pas être vide !");
+            return;
+        }
+
+        const recipientsInput = document
+            .getElementById("recipientsInput")
+            .value.trim();
+        if (recipientsInput === "") {
+            alert("❌ Veuillez entrer au moins une adresse de destinataire !");
+            return;
+        }
+
+        authorizedRecipients = recipientsInput
+            .split(",")
+            .map((addr) => addr.trim().toLowerCase());
+
+        if (!authorizedRecipients.every((addr) => /^0x[a-fA-F0-9]{40}$/.test(addr))) {
+            alert("❌ Une ou plusieurs adresses de destinataires sont invalides !");
+            return;
+        }
+        if (!ethers.isBytesLike(message)) {
+            // hash message using keccak256
+            const hash = ethers.keccak256(ethers.toUtf8Bytes(message));
+            console.log("Message non hashé, hash en cours...");
+            console.log("Message hashé :", hash);
+            messageHash = hash;
+        } else {
+            // if message is already a bytes-like value, use it directly
+            messageHash = message;
+            console.log("Message déjà hashé :", messageHash);
+        }
+
+        signature = await signer.signMessage(ethers.getBytes(messageHash));
+        console.log("hash:", messageHash);
+    } else if (currentTab === 2) {
+        if (!currentPDFFile) {
+            alert("❌ Veuillez sélectionner un fichier PDF avant de signer !");
+            return;
+        }
+        const recipientsInput = document
+            .getElementById("recipientsInput")
+            .value.trim();
+        if (recipientsInput === "") {
+            alert("❌ Veuillez entrer au moins une adresse de destinataire !");
+            return;
+        }
+        authorizedRecipients = recipientsInput
+            .split(",")
+            .map((addr) => addr.trim().toLowerCase());
+        if (!authorizedRecipients.every((addr) => /^0x[a-fA-F0-9]{40}$/.test(addr))) {
+            alert("❌ Une ou plusieurs adresses de destinataires sont invalides !");
+            return;
+        }
+        // Hash du fichier PDF
+        const fileBuffer = await readFileAsArrayBuffer(currentPDFFile);
+        messageHash = ethers.keccak256(new Uint8Array(fileBuffer));
+        console.log("Fichier PDF hashé :", messageHash);
+        signature = await signer.signMessage(ethers.getBytes(messageHash));
+        console.log("Signature du fichier PDF :", signature);
+    } else if (currentTab === 3) {
+        if (!currentImageFile) {
+            alert("❌ Veuillez sélectionner un fichier image avant de signer !");
+            return;
+        }
+        const recipientsInput = document
+            .getElementById("recipientsInput")
+            .value.trim();
+        if (recipientsInput === "") {
+            alert("❌ Veuillez entrer au moins une adresse de destinataire !");
+            return;
+        }
+        authorizedRecipients = recipientsInput
+            .split(",")
+            .map((addr) => addr.trim().toLowerCase());
+        if (!authorizedRecipients.every((addr) => /^0x[a-fA-F0-9]{40}$/.test(addr))) {
+            alert("❌ Une ou plusieurs adresses de destinataires sont invalides !");
+            return;
+        }
+        // Hash du fichier image
+        const fileBuffer = await readFileAsArrayBuffer(currentImageFile);
+        messageHash = ethers.keccak256(new Uint8Array(fileBuffer));
+        console.log("Fichier image hashé :", messageHash);
+        signature = await signer.signMessage(ethers.getBytes(messageHash));
+        console.log("Signature du fichier image :", signature);
+    } else {
+        console.error("❌ Type de signature non supporté !");
+        return;
+    }
+    if (!messageHash || !signature) {
+        console.error("❌ Impossible de signer le message !");
         return;
     }
 
-    const recipientsInput = document
-        .getElementById("recipientsInput")
-        .value.trim();
-    if (recipientsInput === "") {
-        alert("❌ Veuillez entrer au moins une adresse de destinataire !");
-        return;
-    }
-
-    let authorizedRecipients = recipientsInput
-        .split(",")
-        .map((addr) => addr.trim().toLowerCase());
-
-    if (!authorizedRecipients.every((addr) => /^0x[a-fA-F0-9]{40}$/.test(addr))) {
-        alert("❌ Une ou plusieurs adresses de destinataires sont invalides !");
-        return;
-    }
-
-    const messageHash = message;
-    const signature = await signer.signMessage(ethers.getBytes(messageHash));
-    console.log("hash:", messageHash);
-
-    const expirationSelect = document.getElementById("expirationSelect");
-    const expiration = Math.floor(Date.now() / 1000) + parseInt(expirationSelect.value);
-
+    // const expirationSelect = document.getElementById("expirationSelect");
+    // const expiration = Math.floor(Date.now() / 1000) + parseInt(expirationSelect.value);
+    const expiration = Math.floor(Date.now() / 1000) + 31536000
     console.log("📩 Données envoyées à storeSignature:");
     console.log("→ messageHash:", messageHash);
     console.log("→ signature:", signature);
@@ -209,11 +337,15 @@ async function signMessage() {
 
     requestAnimationFrame(async () => {
         try {
+            const timestamp = Math.floor(Date.now() / 1000);
+            console.log("→ timestamp:", timestamp);
+            console.log("📡 Envoi de la transaction...");
             const tx = await contract.storeSignature(
                 messageHash,
                 expiration,
                 authorizedRecipients,
-                signature
+                signature,
+                timestamp
             );
             const receipt = await tx.wait();
             let signatureId = null;
@@ -254,28 +386,45 @@ async function signMessage() {
             sigSpan.title = signatureId;
             container.appendChild(sigSpan);
 
+            // Crée un conteneur flex pour les boutons
+            const buttonContainer = document.createElement("div");
+            buttonContainer.style.display = "flex";
+            buttonContainer.style.gap = "8px";
+            buttonContainer.style.alignItems = "center";
+            buttonContainer.style.width = "100%";
+            container.appendChild(buttonContainer);
+
+            // Bouton de copie
             const copyBtn = document.createElement("button");
             copyBtn.className = "signature-copy-btn";
             copyBtn.setAttribute("aria-label", "Copier la signature");
             copyBtn.innerHTML = '<span class="icon"><i class="fas fa-copy"></i></span> Copier';
-            container.appendChild(copyBtn);
+            copyBtn.style.flex = "1";
+            buttonContainer.appendChild(copyBtn);
 
+            // Bouton de téléchargement
+            const downloadBtn = document.createElement("button");
+            downloadBtn.className = "signature-download-btn";
+            downloadBtn.setAttribute("aria-label", "Télécharger la signature");
+            downloadBtn.innerHTML = '<span class="icon"><i class="fas fa-download"></i></span>';
+            downloadBtn.style.flex = "0 0 25%";
+            downloadBtn.style.minWidth = "80px";
+            if (!isString) {
+                buttonContainer.appendChild(downloadBtn);
+            }
             // Toast
             const toast = document.createElement("div");
             toast.className = "signature-toast";
-            toast.innerText = "✅ Signature copiée dans l'image !";
             toast.style.display = "none";
             container.appendChild(toast);
 
-            copyBtn.onclick = () => {
-                // Animation bouton
-                copyBtn.classList.add("copied");
-                copyBtn.innerHTML = '<span class="icon"><i class="fas fa-check-circle"></i></span> Copié!';
+            // Handler bouton de téléchargement
+            downloadBtn.onclick = () => {
+                downloadBtn.classList.add("copied");
                 setTimeout(() => {
-                    copyBtn.classList.remove("copied");
-                    copyBtn.innerHTML = '<span class="icon"><i class="fas fa-copy"></i></span> Copier';
+                    downloadBtn.classList.remove("copied");
                 }, 1800);
-                // Toast animé
+                toast.innerText = "✅ Signature téléchargée !";
                 toast.style.display = "block";
                 toast.classList.remove("hide");
                 setTimeout(() => {
@@ -285,8 +434,25 @@ async function signMessage() {
                         toast.classList.remove("hide");
                     }, 400);
                 }, 1600);
-                // Copie dans l'image
-                hideTextInImage("http://localhost:8080/DEFAULT_SIGNATURE.png", "[CERTIDOCS]" + signatureId)
+
+                const imageUrl =
+                    currentTab === 0 ? "http://localhost:3000/EMAIL_SIGNATURE.png" :
+                        currentTab === 1 ? "http://localhost:3000/TEXT_SIGNATURE.png" :
+                            currentTab === 2 ? "http://localhost:3000/PDF_SIGNATURE.png" :
+                                "http://localhost:3000/IMAGE_SIGNATURE.png";
+
+                hideTextInImageReturnBlob(imageUrl, "[CERTIDOCS]" + signatureId)
+                    .then((blob) => {
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = "signature.png";
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        console.log("📥 Signature téléchargée !");
+                    })
                     .catch((error) => {
                         toast.innerText = "❌ Erreur lors de la copie !";
                         toast.style.background = "#ffeaea";
@@ -297,13 +463,101 @@ async function signMessage() {
                             setTimeout(() => {
                                 toast.style.display = "none";
                                 toast.classList.remove("hide");
-                                toast.innerText = "✅ Signature copiée dans l'image !";
+                                toast.innerText = "✅ Signature téléchargée !";
                                 toast.style.background = "#fff";
                                 toast.style.color = "#7a67e4";
                             }, 400);
                         }, 2000);
                     });
             };
+
+            // Handler bouton de copie
+            copyBtn.onclick = () => {
+                copyBtn.classList.add("copied");
+                copyBtn.innerHTML = '<span class="icon"><i class="fas fa-check-circle"></i></span> Copié!';
+                setTimeout(() => {
+                    copyBtn.classList.remove("copied");
+                    copyBtn.innerHTML = '<span class="icon"><i class="fas fa-copy"></i></span> Copier';
+                }, 1800);
+
+                toast.innerText = "✅ Signature copiée !";
+                toast.style.display = "block";
+                toast.classList.remove("hide");
+                setTimeout(() => {
+                    toast.classList.add("hide");
+                    setTimeout(() => {
+                        toast.style.display = "none";
+                        toast.classList.remove("hide");
+                    }, 400);
+                }, 1600);
+
+                const imageUrl =
+                    currentTab === 0 ? "http://localhost:3000/EMAIL_SIGNATURE.png" :
+                        currentTab === 1 ? "http://localhost:3000/TEXT_SIGNATURE.png" :
+                            currentTab === 2 ? "http://localhost:3000/PDF_SIGNATURE.png" :
+                                "http://localhost:3000/IMAGE_SIGNATURE.png";
+                if (isString) {
+                    // put [CERTIDOCS] + signatureId in the clipboard
+                    const item = new ClipboardItem({
+                        "text/plain": new Blob(["[CERTIDOCS]" + signatureId], { type: "text/plain" })
+                    });
+                    navigator.clipboard.write([item])
+                        .then(() => {
+                            console.log("📋 Signature copiée dans le presse-papiers !");
+                            toast.innerText = "✅ Signature copiée !";
+                            toast.style.background = "#fff";
+                            toast.style.color = "#7a67e4";
+                            toast.style.display = "block";
+                            setTimeout(() => {
+                                toast.classList.add("hide");
+                                setTimeout(() => {
+                                    toast.style.display = "none";
+                                    toast.classList.remove("hide");
+                                    toast.innerText = "✅ Signature copiée !";
+                                    toast.style.background = "#fff";
+                                    toast.style.color = "#7a67e4";
+                                }, 400);
+                            }
+                                , 2000);
+                        })
+                        .catch((error) => {
+                            console.error("❌ Erreur lors de la copie :", error);
+                            toast.innerText = "❌ Erreur lors de la copie !";
+                            toast.style.background = "#ffeaea";
+                            toast.style.color = "#d32f2f";
+                            toast.style.display = "block";
+                            setTimeout(() => {
+                                toast.classList.add("hide");
+                                setTimeout(() => {
+                                    toast.style.display = "none";
+                                    toast.classList.remove("hide");
+                                    toast.innerText = "✅ Signature copiée !";
+                                    toast.style.background = "#fff";
+                                    toast.style.color = "#7a67e4";
+                                }, 400);
+                            }, 2000);
+                        });
+                } else {
+                    hideTextInImage(imageUrl, "[CERTIDOCS]" + signatureId)
+                        .catch((error) => {
+                            toast.innerText = "❌ Erreur lors de la copie !";
+                            toast.style.background = "#ffeaea";
+                            toast.style.color = "#d32f2f";
+                            toast.style.display = "block";
+                            setTimeout(() => {
+                                toast.classList.add("hide");
+                                setTimeout(() => {
+                                    toast.style.display = "none";
+                                    toast.classList.remove("hide");
+                                    toast.innerText = "✅ Signature copiée !";
+                                    toast.style.background = "#fff";
+                                    toast.style.color = "#7a67e4";
+                                }, 400);
+                            }, 2000);
+                        });
+                }
+            };
+
 
             status.appendChild(container);
         } catch (error) {
@@ -312,6 +566,25 @@ async function signMessage() {
         }
     });
 }
+
+window.addEventListener('pdfFileSelected', (event) => {
+    // extract the PDF file from the event detail
+    const pdfFile = event.detail;
+    currentPDFFile = pdfFile;
+    console.log("PDF file selected:", pdfFile);
+});
+
+window.addEventListener('tabChanged', (event) => {
+    const tabIDX = event.detail;
+    currentTab = tabIDX;
+    console.log("Tab changed to:", tabIDX);
+});
+
+window.addEventListener('imageFileSelected', (event) => {
+    const imageFile = event.detail;
+    currentImageFile = imageFile;
+    console.log("Image file selected:", imageFile);
+});
 
 document.getElementById("signMessage").addEventListener("click", signMessage);
 // document.addEventListener("DOMContentLoaded", connectMetaMask);

@@ -7,7 +7,7 @@ if (typeof contract === "undefined") {
     var contract = null;
 }
 if (typeof contractAddress === "undefined") {
-    var contractAddress = "0x7b63B543Ee68aa8C9faaAB12Ba73827F6973378f";
+    var contractAddress = "0x6515cc2007BF39BF74bc561d054D228325223A2A";
 }
 if (typeof abi === "undefined") {
     var abi = [
@@ -30,6 +30,11 @@ if (messageHashVar) {
 if (signatureIdVar) {
     document.getElementById("signatureId").value = signatureIdVar.split("[CERTIDOCS]")[1];
 }
+
+let currentTab = 0; // 0: mail, 1: text, 2: PDF, 3: image
+let currentSignatureFile = null; // Pour stocker le fichier de signature sélectionné
+let currentPDFFile = null; // Pour stocker le fichier PDF sélectionné
+let currentImageFile = null; // Pour stocker le fichier image sélectionné
 
 // Events walletConnected/walletDisconnected (gérés par React/appkit)
 window.addEventListener('walletConnected', async () => {
@@ -202,7 +207,7 @@ function showBeautifulAlert(message, type = 'error') {
             }
         }
     `;
-    
+
     document.head.appendChild(style);
     document.body.appendChild(alertDiv);
 
@@ -214,50 +219,306 @@ function showBeautifulAlert(message, type = 'error') {
     }, 5000);
 }
 
+function readFileAsArrayBuffer(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+    });
+}
+
+
 // Vérification de la signature (exemple)
 async function verifySignature() {
     // Vérifier si l'utilisateur est connecté
+    isString = document.getElementById("signatureCheckbox").checked;
+    window.dispatchEvent(new CustomEvent('Error', { detail: 'Vérification de la signature' }));
     if (!signer) {
         showBeautifulAlert('🔐 Veuillez d\'abord connecter votre wallet pour vérifier une signature', 'error');
         return;
     }
 
-    const signatureId = document.getElementById("signatureId").value.trim();
-    if (!/^0x[a-fA-F0-9]{64}$/.test(signatureId)) {
-        alert("❌ L'ID de signature est invalide !");
-        return;
-    }
-
-    const message = document.getElementById("messageInput").value.trim();
-    if (message === "") {
-        alert("❌ Le message ne peut pas être vide !");
-        return;
-    }
-    
-    messageHash = message;
-    const userAddress = await signer.getAddress();
-    console.log("Hash du message :", messageHash);
-    document.getElementById("verify").innerText = "⏳ Vérification en cours...";
-    try {
-        const isValid = await contract.verifySignature(
-            signatureId,
-            userAddress,
-            messageHash
-        );
-        document.getElementById("verify").innerText = isValid
-        ? "✅ Signature VALIDE !"
-        : "❌ Signature NON VALIDE.";
-        console.log(isValid);
-    } catch (error) {
-        // Ne pas afficher d'alerte pour l'erreur de décodage
-        if (!error.message.includes("could not decode result data")) {
-            alert(error.message);
+    if (currentTab === 0) {
+        const signatureId = document.getElementById("signatureId").value.trim();
+        if (!/^0x[a-fA-F0-9]{64}$/.test(signatureId)) {
+            alert("❌ L'ID de signature est invalide !");
+            return;
         }
-        console.error(error);
-        document.getElementById("verify").innerText =
-        "❌ Erreur lors de la vérification.";
+
+        const message = document.getElementById("messageInput").value.trim();
+        console.log("Message à vérifier :", message);
+        if (message === "") {
+            alert("❌ Le message ne peut pas être vide !");
+            return;
+        }
+
+        messageHash = message;
+        const userAddress = await signer.getAddress();
+        console.log("Hash du message :", messageHash);
+        document.getElementById("verify").innerText = "⏳ Vérification en cours...";
+        try {
+            const isValid = await contract.verifySignature(
+                signatureId,
+                userAddress,
+                messageHash
+            );
+            document.getElementById("verify").innerText = isValid
+                ? "✅ Signature VALIDE !"
+                : "❌ Signature NON VALIDE.";
+            console.log(isValid);
+        } catch (error) {
+            // Ne pas afficher d'alerte pour l'erreur de décodage
+            if (!error.message.includes("could not decode result data")) {
+                alert(error.message);
+            }
+            console.error(error);
+            document.getElementById("verify").innerText =
+                "❌ Erreur lors de la vérification.";
+        }
+    } else if (currentTab === 1) {
+        if (!currentSignatureFile && !isString) {
+            showBeautifulAlert('Veuillez d\'abord sélectionner un fichier de signature', 'error');
+            return;
+        }
+        let signatureId;
+        if (isString) {
+            signatureId = document.getElementById("signatureIdString").value.trim();
+            console.log("signatureIdString:", signatureId);
+        } else {
+            signatureId = await extractTextFromFileImage(currentSignatureFile).catch((error) => {
+                console.error("Error extracting signatureId:", error);
+                showBeautifulAlert('Erreur lors de l\'extraction de la signature depuis l\'image', 'error');
+            });
+        }
+        if (!signatureId) {
+            showBeautifulAlert('Erreur lors de l\'extraction de la signature depuis l\'image', 'error');
+            window.dispatchEvent(new CustomEvent('Error', { detail: 'Erreur lors de l\'extraction de la signature depuis l\'image' }));
+            return;
+        }
+        // remove the [CERTIDOCS] prefix if it exists and trim
+        if (signatureId.startsWith("[CERTIDOCS]")) {
+            signatureId = signatureId.replace("[CERTIDOCS]", "");
+        }
+        signatureId = signatureId.trim();
+        if (!/^0x[a-fA-F0-9]{64}$/.test(signatureId)) {
+            showBeautifulAlert("L'ID de signature est invalide !", 'error');
+            window.dispatchEvent(new CustomEvent('Error', { detail: 'Erreur lors de l\'extraction de la signature depuis l\'image' }));
+            return;
+        }
+        const message = document.getElementById("texte2").value.trim();
+        console.log("TEXTE à vérifier :", message);
+        if (message === "") {
+            showBeautifulAlert("Le message ne peut pas être vide !", 'error');
+            window.dispatchEvent(new CustomEvent('Error', { detail: 'Erreur lors de l\'extraction de la signature depuis l\'image' }));
+            return;
+        }
+        messageHash = ethers.keccak256(ethers.toUtf8Bytes(message));
+        const userAddress = await signer.getAddress();
+        console.log("Hash du message :", messageHash);
+        // document.getElementById("verify").innerText = "⏳ Vérification en cours...";
+        try {
+            const isValid = await contract.verifySignature(
+                signatureId,
+                userAddress,
+                messageHash
+            );
+            document.getElementById("verify").innerText = isValid
+                ? "✅ Signature VALIDE !"
+                : "❌ Signature NON VALIDE.";
+            console.log(isValid);
+        }
+        catch (error) {
+            // Ne pas afficher d'alerte pour l'erreur de décodage
+            if (!error.message.includes("could not decode result data")) {
+                showBeautifulAlert(error.message, 'error');
+            }
+            console.error(error);
+            document.getElementById("verify").innerText =
+                "❌ Erreur lors de la vérification.";
+        }
+    } else if (currentTab === 2) {
+        if (!currentPDFFile) {
+            showBeautifulAlert('Veuillez d\'abord sélectionner un fichier PDF', 'error');
+            window.dispatchEvent(new CustomEvent('Error', { detail: 'Erreur lors de l\'extraction de la signature depuis l\'image' }));
+            return;
+        }
+        if (!currentSignatureFile && !isString) {
+            showBeautifulAlert('Veuillez d\'abord sélectionner un fichier de signature', 'error');
+            window.dispatchEvent(new CustomEvent('Error', { detail: 'Erreur lors de l\'extraction de la signature depuis l\'image' }));
+            return;
+        }
+        let signatureId;
+        if (isString) {
+            signatureId = document.getElementById("signatureIdString").value.trim();
+        } else {
+            signatureId = await extractTextFromFileImage(currentSignatureFile).catch((error) => {
+                console.error("Error extracting signatureId:", error);
+                showBeautifulAlert('Erreur lors de l\'extraction de la signature depuis l\'image', 'error');
+            });
+        }
+        if (!signatureId) {
+            showBeautifulAlert('Erreur lors de l\'extraction de la signature depuis l\'image', 'error');
+            window.dispatchEvent(new CustomEvent('Error', { detail: 'Erreur lors de l\'extraction de la signature depuis l\'image' }));
+            return;
+        }
+        // remove the [CERTIDOCS] prefix if it exists and trim
+        if (signatureId.startsWith("[CERTIDOCS]")) {
+            signatureId = signatureId.replace("[CERTIDOCS]", "");
+        }
+        signatureId = signatureId.trim();
+        if (!/^0x[a-fA-F0-9]{64}$/.test(signatureId)) {
+            showBeautifulAlert("L'ID de signature est invalide !", 'error');
+            window.dispatchEvent(new CustomEvent('Error', { detail: 'Erreur lors de l\'extraction de la signature depuis l\'image' }));
+            return;
+        }
+        const fileBuffer = await readFileAsArrayBuffer(currentPDFFile);
+        messageHash = ethers.keccak256(new Uint8Array(fileBuffer));
+        const userAddress = await signer.getAddress();
+        console.log("Hash du PDF :", messageHash);
+        // document.getElementById("verify").innerText = "⏳ Vérification en cours...";
+        try {
+            const isValid = await contract.verifySignature(
+                signatureId,
+                userAddress,
+                messageHash
+            );
+            document.getElementById("verify").innerText = isValid
+                ? "✅ Signature VALIDE !"
+                : "❌ Signature NON VALIDE.";
+            console.log(isValid);
+        }
+        catch (error) {
+            // Ne pas afficher d'alerte pour l'erreur de décodage
+            if (!error.message.includes("could not decode result data")) {
+                showBeautifulAlert(error.message, 'error');
+            }
+            console.error(error);
+            document.getElementById("verify").innerText =
+                "❌ Erreur lors de la vérification.";
+        }
+    } else if (currentTab === 3) {
+        if (!currentImageFile) {
+            showBeautifulAlert('Veuillez d\'abord sélectionner un fichier image', 'error');
+            window.dispatchEvent(new CustomEvent('Error', { detail: 'Erreur lors de l\'extraction de la signature depuis l\'image' }));
+            return;
+        }
+        if (!currentSignatureFile && !isString) {
+            showBeautifulAlert('Veuillez d\'abord sélectionner un fichier de signature', 'error');
+            window.dispatchEvent(new CustomEvent('Error', { detail: 'Erreur lors de l\'extraction de la signature depuis l\'image' }));
+            return;
+        }
+        let signatureId;
+        if (isString) {
+            signatureId = document.getElementById("signatureIdString").value.trim();
+        } else {
+            signatureId = await extractTextFromFileImage(currentSignatureFile).catch((error) => {
+                console.error("Error extracting signatureId:", error);
+                showBeautifulAlert('Erreur lors de l\'extraction de la signature depuis l\'image', 'error');
+            });
+        }
+        if (!signatureId) {
+            showBeautifulAlert('Erreur lors de l\'extraction de la signature depuis l\'image', 'error');
+            window.dispatchEvent(new CustomEvent('Error', { detail: 'Erreur lors de l\'extraction de la signature depuis l\'image' }));
+            return;
+        }
+        // remove the [CERTIDOCS] prefix if it exists and trim
+        if (signatureId.startsWith("[CERTIDOCS]")) {
+            signatureId = signatureId.replace("[CERTIDOCS]", "");
+        }
+        signatureId = signatureId.trim();
+        if (!/^0x[a-fA-F0-9]{64}$/.test(signatureId)) {
+            showBeautifulAlert("L'ID de signature est invalide !", 'error');
+            window.dispatchEvent(new CustomEvent('Error', { detail: 'Erreur lors de l\'extraction de la signature depuis l\'image' }));
+            return;
+        }
+
+        const fileBuffer = await readFileAsArrayBuffer(currentImageFile);
+        messageHash = ethers.keccak256(new Uint8Array(fileBuffer));
+        const userAddress = await signer.getAddress();
+        console.log("Hash de l'image :", messageHash);
+        // document.getElementById("verify").innerText = "⏳ Vérification en cours...";
+        try {
+            const isValid = await contract.verifySignature(
+                signatureId,
+                userAddress,
+                messageHash
+            );
+            document.getElementById("verify").innerText = isValid
+                ? "✅ Signature VALIDE !"
+                : "❌ Signature NON VALIDE.";
+            console.log(isValid);
+        }
+        catch (error) {
+            // Ne pas afficher d'alerte pour l'erreur de décodage
+            if (!error.message.includes("could not decode result data")) {
+                showBeautifulAlert(error.message, 'error');
+            }
+            console.error(error);
+            document.getElementById("verify").innerText =
+                "❌ Erreur lors de la vérification.";
+        }
+    } else {
+        showBeautifulAlert('Veuillez sélectionner un onglet valide pour vérifier la signature', 'error');
     }
 }
+
+async function extractTextFromFileImage(file) {
+    if (!(file instanceof File)) {
+        throw new Error("L'argument doit être un objet File.");
+    }
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = URL.createObjectURL(file);
+    return new Promise((resolve, reject) => {
+        img.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0);
+
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            let binaryText = "";
+            for (let i = 0; i < data.length; i += 4) {
+                binaryText += (data[i] & 1).toString();
+                if (binaryText.endsWith("00000000")) break;
+            }
+
+            const chars = binaryText.match(/.{8}/g).map(byte => String.fromCharCode(parseInt(byte, 2)));
+            resolve(chars.join('').replace(/\x00+$/, ''));
+        };
+
+        img.onerror = () => reject("Erreur de chargement de l'image");
+    });
+}
+
+window.addEventListener('signatureFileChanged', (event) => {
+    // extract the signatureId from the signatureFile id element
+    const signatureFile = event.detail;
+    currentSignatureFile = signatureFile;
+});
+
+window.addEventListener('pdfFileChanged', (event) => {
+    // extract the PDF file from the event detail
+    const pdfFile = event.detail;
+    currentPDFFile = pdfFile;
+    console.log("PDF file selected:", pdfFile);
+});
+
+window.addEventListener('tabChanged', (event) => {
+    console.log("Tab changed to:", event.detail);
+    currentTab = event.detail;
+});
+
+window.addEventListener('imageFileChanged', (event) => {
+    // extract the image file from the event detail
+    const imageFile = event.detail;
+    currentImageFile = imageFile;
+    console.log("Image file selected:", imageFile);
+});
 
 // Attache l'event click sur le bouton de vérification après chargement du DOM
 document

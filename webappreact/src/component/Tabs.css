@@ -1,6 +1,5 @@
 .tabs-container {
   width: 100%;
-  margin: 24px 0;
 }
 
 .tabs-header {
@@ -82,7 +81,6 @@
   display: flex;
   background: rgba(255, 255, 255, 0.8);
   border-radius: 16px;
-  margin-bottom: 1.2rem;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(149, 132, 255, 0.15);
   backdrop-filter: blur(10px);
@@ -92,7 +90,7 @@
 
 .tab {
   flex: 1;
-  padding: 14px 16px;
+  /* padding: 14px 16px; */
   text-align: center;
   color: #6b7280;
   font-weight: 600;

@@ -7,17 +7,8 @@ const TexteSection = ({ value, onChange }) => {
     return null;
   }
 
-  return (
-    <div style={{ margin: '16px 0' }}>
-      <CustomTextInput
-        id="texteSectionInput"
-        rows={6}
-        placeholder="Saisissez votre texte ici..."
-        value={value}
-        onChange={onChange}
-      />
-    </div>
-  );
+  return (<div className="texte-section">
+    </div>);
 };
 
 export default TexteSection; 

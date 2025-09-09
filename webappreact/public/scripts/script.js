@@ -15,6 +15,21 @@ if (typeof abi === "undefined") {
     ];
 }
 
+// Configuration de l'URL de base selon l'environnement
+const baseUrl = (() => {
+    // Détection de l'environnement basée sur l'URL actuelle
+    const hostname = window.location.hostname;
+    const protocol = window.location.protocol;
+    
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        // Environnement de développement
+        return 'http://localhost:3000';
+    } else {
+        // Environnement de production
+        return 'https://certidocsweb-yf6fjg.dappling.network';
+    }
+})();
+
 let currentTab = 0; // 0 = mail, 1 = Texte, 2 = PDF, 3 = Image
 let currentPDFFile = null;
 let currentImageFile = null;
@@ -120,7 +135,7 @@ async function hideTextInImage(imageUrl, text) {
     });
 }
 
-// retrieve the variable inside url wich is formatted like localhost3000/?messageHash=0x1234567890
+// retrieve the variable inside url wich is formatted like https://certidocsweb-yf6fjg.dappling.network/?messageHash=0x1234567890
 if (typeof urlParams === "undefined") {
     var urlParams = new URLSearchParams(window.location.search);
 }
@@ -436,10 +451,10 @@ async function signMessage() {
                 }, 1600);
 
                 const imageUrl =
-                    currentTab === 0 ? "http://localhost:3000/EMAIL_SIGNATURE.png" :
-                        currentTab === 1 ? "http://localhost:3000/TEXT_SIGNATURE.png" :
-                            currentTab === 2 ? "http://localhost:3000/PDF_SIGNATURE.png" :
-                                "http://localhost:3000/IMAGE_SIGNATURE.png";
+                    currentTab === 0 ? `${baseUrl}/EMAIL_SIGNATURE.png` :
+                        currentTab === 1 ? `${baseUrl}/TEXT_SIGNATURE.png` :
+                            currentTab === 2 ? `${baseUrl}/PDF_SIGNATURE.png` :
+                                `${baseUrl}/IMAGE_SIGNATURE.png`;
 
                 hideTextInImageReturnBlob(imageUrl, "[CERTIDOCS]" + signatureId)
                     .then((blob) => {
@@ -492,10 +507,10 @@ async function signMessage() {
                 }, 1600);
 
                 const imageUrl =
-                    currentTab === 0 ? "http://localhost:3000/EMAIL_SIGNATURE.png" :
-                        currentTab === 1 ? "http://localhost:3000/TEXT_SIGNATURE.png" :
-                            currentTab === 2 ? "http://localhost:3000/PDF_SIGNATURE.png" :
-                                "http://localhost:3000/IMAGE_SIGNATURE.png";
+                    currentTab === 0 ? `${baseUrl}/EMAIL_SIGNATURE.png` :
+                        currentTab === 1 ? `${baseUrl}/TEXT_SIGNATURE.png` :
+                            currentTab === 2 ? `${baseUrl}/PDF_SIGNATURE.png` :
+                                `${baseUrl}/IMAGE_SIGNATURE.png`;
                 if (isString) {
                     // put [CERTIDOCS] + signatureId in the clipboard
                     const item = new ClipboardItem({

@@ -24,7 +24,7 @@
     },
     "host_permissions": ["<all_urls>"],
     "web_accessible_resources": [{
-        "resources": ["lib/ethers.umd.min.js"],
+        "resources": ["lib/ethers.umd.min.js", "config.js"],
         "matches": ["<all_urls>"]
     }]
 }

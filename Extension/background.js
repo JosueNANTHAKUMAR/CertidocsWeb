@@ -1,4 +1,5 @@
 importScripts("./lib/ethers.umd.min.js");
+importScripts("./config.js");
 
 chrome.runtime.onMessage.addListener((request) => {
     if (request.action === "openSignatureWindow") {
@@ -34,7 +35,7 @@ chrome.runtime.onMessage.addListener((request) => {
 
                     if (!response || !response.content) {
                         chrome.windows.create({
-                            url: "http://localhost:3000/", // Remplace par l'URL que tu veux
+                            url: getGenerateUrl(),
                             type: "popup",
                             width: windowWidth,
                             height: windowHeight,
@@ -46,7 +47,7 @@ chrome.runtime.onMessage.addListener((request) => {
                     console.log("Contenu de la div:", response.content);
                     if (response.content === "Aucune div trouvée") {
                         chrome.windows.create({
-                            url: "http://localhost:3000/", // Remplace par l'URL que tu veux
+                            url: getGenerateUrl(),
                             type: "popup",
                             width: windowWidth,
                             height: windowHeight,
@@ -57,7 +58,7 @@ chrome.runtime.onMessage.addListener((request) => {
                     } else {
                         const hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(response.content));
                         chrome.windows.create({
-                            url: "http://localhost:3000/?messageHash=" + hash, // Remplace par l'URL que tu veux
+                            url: getGenerateUrl(hash),
                             type: "popup",
                             width: windowWidth,
                             height: windowHeight,
@@ -94,7 +95,7 @@ chrome.runtime.onMessage.addListener((request) => {
                 chrome.tabs.sendMessage(tabs[0].id, { action: "getDivContentVerify" }, (response) => {
                     if (!response || !response.content) {
                         chrome.windows.create({
-                            url: "http://localhost:3000/verify", // Remplace par l'URL que tu veux
+                            url: getVerifyUrl(),
                             type: "popup",
                             width: windowWidth,
                             height: windowHeight,
@@ -107,7 +108,7 @@ chrome.runtime.onMessage.addListener((request) => {
                     console.log("SignatureId:", response.signatureId);
                     if (response.content === "Aucune div trouvée") {
                         chrome.windows.create({
-                            url: "http://localhost:3000/verify", // Remplace par l'URL que tu veux
+                            url: getVerifyUrl(),
                             type: "popup",
                             width: windowWidth,
                             height: windowHeight,
@@ -118,7 +119,7 @@ chrome.runtime.onMessage.addListener((request) => {
                     } else {
                         const hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(response.content));
                         chrome.windows.create({
-                            url: "http://localhost:3000/verify?messageHash=" + hash + "&signatureId=" + response.signatureId, // Remplace par l'URL que tu veux
+                            url: getVerifyUrl(hash, response.signatureId),
                             type: "popup",
                             width: windowWidth,
                             height: windowHeight,

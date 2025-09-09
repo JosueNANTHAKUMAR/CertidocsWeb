@@ -20,6 +20,8 @@ const baseUrl = (() => {
     // Détection de l'environnement basée sur l'URL actuelle
     const hostname = window.location.hostname;
     const protocol = window.location.protocol;
+
+    console.log(hostname, protocol);
     
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
         // Environnement de développement

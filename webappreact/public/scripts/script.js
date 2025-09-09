@@ -20,12 +20,10 @@ const baseUrl = (() => {
     // Détection de l'environnement basée sur l'URL actuelle
     const hostname = window.location.hostname;
     const protocol = window.location.protocol;
-
-    console.log(hostname, protocol);
     
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
         // Environnement de développement
-        return 'http://localhost:3000';
+        return 'http://localhost:3002';
     } else {
         // Environnement de production
         return 'https://certidocsweb-yf6fjg.dappling.network';

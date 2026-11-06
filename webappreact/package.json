@@ -47,5 +47,8 @@
   },
   "devDependencies": {
     "ajv": "^8.17.1"
+  },
+  "overrides": {
+    "@wagmi/connectors": "6.2.0"
   }
 }
